@@ -3,6 +3,7 @@
 import { Heart, Lock, Clock, Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getRecipeVisual } from '@/lib/recipes';
+import { ImageWithFallback } from '@/components/recipe/ImageWithFallback';
 import type { Recipe } from '@/types';
 import { useFavorites } from '@/store/favorites';
 import { usePremium } from '@/store/premium';
@@ -60,16 +61,22 @@ export function RecipeCard({ recipe, onClick, compact = false }: RecipeCardProps
         visual.gradient,
         compact ? 'aspect-[4/3]' : 'aspect-square'
       )}>
-        {visual.photo ? (
-          <img src={visual.photo} alt={recipe.title} className="absolute inset-0 h-full w-full object-cover" />
-        ) : null}
-        <div className={cn('absolute inset-0 flex items-center justify-center', visual.photo && 'bg-black/20')}>
-          {!visual.photo && (
-            <span className={cn('drop-shadow-lg transition-transform group-hover:scale-110', compact ? 'text-5xl' : 'text-6xl')}>
+        <ImageWithFallback
+          src={visual.photo}
+          alt={recipe.title}
+          className="absolute inset-0 h-full w-full object-cover"
+          fallbackClassName={cn(
+            'absolute inset-0 flex items-center justify-center',
+            compact ? 'text-5xl' : 'text-6xl'
+          )}
+          fallback={
+            <span className="drop-shadow-lg transition-transform group-hover:scale-110">
               {visual.emoji}
             </span>
-          )}
-        </div>
+          }
+        />
+        {/* Subtle dark overlay for badge contrast when photo loads */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/10" />
         {/* Top row: fav + lock */}
         <div className="absolute inset-x-0 top-0 flex items-center justify-between p-2">
           <span

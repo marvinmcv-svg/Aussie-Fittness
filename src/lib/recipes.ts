@@ -126,14 +126,15 @@ export function computeMacroTotals(recipeIds: string[], servingsMultiplier = 1) 
   return { calories: Math.round(calories), carbs: Math.round(carbs), fats: Math.round(fats), protein: Math.round(protein) };
 }
 
-// Generate a deterministic gradient + emoji for a recipe (used as visual placeholder)
-// A few featured recipes have real generated photos available.
+// Generate a deterministic gradient + emoji for a recipe (used as visual placeholder).
+// Every recipe has a generated photo at /recipes/{id}.png — the ImageWithFallback
+// component gracefully falls back to the emoji if the photo hasn't been generated yet.
 const RECIPE_PHOTOS: Record<string, string> = {
   r001: '/recipes/hero-curry.png',
   r002: '/recipes/hero-burrito.png',
 };
 
-export function getRecipeVisual(recipe: Recipe): { gradient: string; emoji: string; photo?: string } {
+export function getRecipeVisual(recipe: Recipe): { gradient: string; emoji: string; photo: string } {
   const title = recipe.title.toLowerCase();
   let emoji = '🍽️';
   if (title.includes('chicken')) emoji = '🍗';
@@ -173,5 +174,8 @@ export function getRecipeVisual(recipe: Recipe): { gradient: string; emoji: stri
         'from-teal-500 via-emerald-500 to-lime-500',
       ];
   const idx = recipe.id.charCodeAt(1) % gradients.length; // use id char for determinism
-  return { gradient: gradients[idx], emoji, photo: RECIPE_PHOTOS[recipe.id] };
+  // Every recipe gets a photo path. Special-case the two hero images that use
+  // a landscape aspect; the rest use the standard /recipes/{id}.png square.
+  const photo = RECIPE_PHOTOS[recipe.id] ?? `/recipes/${recipe.id}.png`;
+  return { gradient: gradients[idx], emoji, photo };
 }

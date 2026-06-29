@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { getRecipeById, getRecipeVisual } from '@/lib/recipes';
 import { MacroRing, MacroBar } from '@/components/recipe/MacroBar';
+import { ImageWithFallback } from '@/components/recipe/ImageWithFallback';
 import { useFavorites } from '@/store/favorites';
 import { usePremium } from '@/store/premium';
 import { useMealPlan } from '@/store/mealPlan';
@@ -100,13 +101,13 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
 
       {/* Hero image */}
       <div className={`relative aspect-[16/10] overflow-hidden rounded-3xl bg-gradient-to-br ${visual.gradient}`}>
-        {visual.photo ? (
-          <img src={visual.photo} alt={recipe.title} className="absolute inset-0 h-full w-full object-cover" />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-8xl drop-shadow-2xl">{visual.emoji}</span>
-          </div>
-        )}
+        <ImageWithFallback
+          src={visual.photo}
+          alt={recipe.title}
+          className="absolute inset-0 h-full w-full object-cover"
+          fallbackClassName="absolute inset-0 flex items-center justify-center"
+          fallback={<span className="text-8xl drop-shadow-2xl">{visual.emoji}</span>}
+        />
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="absolute left-4 top-4 flex gap-2">
           <button

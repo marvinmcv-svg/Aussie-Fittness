@@ -61,3 +61,24 @@ Stage Summary:
 - Freemium model: 25 free recipes, 110 premium with simulated one-time unlock ($9.99)
 - Data persists across reloads via localStorage (favorites, meal plan, shopping list, premium status)
 - Dev server running cleanly on port 3000, lint passes with 0 errors
+
+---
+Task ID: 13-17
+Agent: main
+Task: Add images to all 135 recipes
+
+Work Log:
+- Wrote `scripts/generate_images.ts` — uses z-ai-web-dev-sdk to generate a 1024x1024 food photo for each recipe, with idempotent skip-if-exists, retry-with-backoff for 429 rate limits, and a concurrency pool
+- Prompts: "Professional food photography of {title}, a {category} dish, plated on dark ceramic, dark slate background, top-down, studio lighting, high quality, fitness meal" — consistent style across all recipes
+- Hit rate limits (429) when concurrency was too high (5, then 3); settled on concurrency 2 with 3s delay between requests + 6-attempt exponential backoff (10s→50s)
+- Created `scripts/gen_all.sh` loop that re-runs generation until all 135 images exist, scheduled in background
+- Created `ImageWithFallback` component — renders the photo, falls back to the emoji+gradient if the image 404s (e.g. not yet generated or browser-cached 404). Remounts on src change via parent key.
+- Updated `getRecipeVisual` to return `photo: /recipes/{id}.png` for EVERY recipe (standard naming); r001/r002 keep their landscape hero images
+- Updated RecipeCard, RecipeDetailScreen hero, PlannerScreen (meal list + recipe picker modal) to use ImageWithFallback
+- Added subtle dark overlay gradient on cards for badge contrast when photo loads
+
+Stage Summary:
+- 50/135 images generated so far; generation loop running in background to complete the rest
+- App gracefully shows emoji fallbacks for not-yet-generated images; as generation completes, images appear on reload
+- All code changes lint-clean; no runtime errors
+- Images stored at `public/recipes/{id}.png` (1024x1024, ~200KB each)

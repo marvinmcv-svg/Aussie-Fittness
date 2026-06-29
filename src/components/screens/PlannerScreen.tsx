@@ -6,6 +6,7 @@ import {
   Wheat, Droplet, ShoppingBasket, CalendarDays
 } from 'lucide-react';
 import { getRecipeById, getRecipeVisual, getAllRecipes } from '@/lib/recipes';
+import { ImageWithFallback } from '@/components/recipe/ImageWithFallback';
 import { useMealPlan } from '@/store/mealPlan';
 import { useShoppingList } from '@/store/shoppingList';
 import type { MealType } from '@/types';
@@ -190,8 +191,14 @@ export function PlannerScreen({ onNavigate }: PlannerScreenProps) {
                         key={m.id}
                         className="flex items-center gap-3 rounded-xl border border-border p-2"
                       >
-                        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${visual.gradient} text-2xl`}>
-                          {visual.emoji}
+                        <div className={`relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br ${visual.gradient}`}>
+                          <ImageWithFallback
+                            src={visual.photo}
+                            alt={r.title}
+                            className="absolute inset-0 h-full w-full object-cover"
+                            fallbackClassName="absolute inset-0 flex items-center justify-center text-2xl"
+                            fallback={<span>{visual.emoji}</span>}
+                          />
                         </div>
                         <div className="min-w-0 flex-1">
                           <button
@@ -385,8 +392,14 @@ function RecipePicker({
                   onClick={() => pick(r.id)}
                   className="flex w-full items-center gap-3 rounded-xl border border-border p-2 text-left transition-colors hover:border-primary hover:bg-primary/5"
                 >
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${visual.gradient} text-xl`}>
-                    {visual.emoji}
+                  <div className={`relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br ${visual.gradient}`}>
+                    <ImageWithFallback
+                      src={visual.photo}
+                      alt={r.title}
+                      className="absolute inset-0 h-full w-full object-cover"
+                      fallbackClassName="absolute inset-0 flex items-center justify-center text-xl"
+                      fallback={<span>{visual.emoji}</span>}
+                    />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-medium">{r.title}</div>
