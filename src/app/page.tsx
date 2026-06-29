@@ -1,15 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Home, Search, Calendar, ShoppingCart, User } from 'lucide-react';
+import { useSession, signOut } from 'next-auth/react';
+import { Home, Search, Calendar, ShoppingCart, User, Shield, LogOut } from 'lucide-react';
 import { HomeScreen } from '@/components/screens/HomeScreen';
 import { BrowseScreen } from '@/components/screens/BrowseScreen';
 import { RecipeDetailScreen } from '@/components/screens/RecipeDetailScreen';
 import { PlannerScreen } from '@/components/screens/PlannerScreen';
 import { ShoppingScreen } from '@/components/screens/ShoppingScreen';
 import { ProfileScreen } from '@/components/screens/ProfileScreen';
+import { AdminScreen } from '@/components/screens/AdminScreen';
+import { usePremium } from '@/store/premium';
 
-export type Screen = 'home' | 'browse' | 'recipe' | 'planner' | 'shopping' | 'profile';
+export type Screen = 'home' | 'browse' | 'recipe' | 'planner' | 'shopping' | 'profile' | 'admin';
 
 interface Tab {
   id: Screen;
@@ -17,7 +20,7 @@ interface Tab {
   icon: React.ReactNode;
 }
 
-const TABS: Tab[] = [
+const BASE_TABS: Tab[] = [
   { id: 'home', label: 'Home', icon: <Home className="h-5 w-5" /> },
   { id: 'browse', label: 'Recipes', icon: <Search className="h-5 w-5" /> },
   { id: 'planner', label: 'Planner', icon: <Calendar className="h-5 w-5" /> },
@@ -26,20 +29,31 @@ const TABS: Tab[] = [
 ];
 
 export default function Home_() {
+  const { data: session, status } = useSession();
   const [screen, setScreen] = useState<Screen>('home');
   const [recipeId, setRecipeId] = useState<string | undefined>();
   const [browseCategory, setBrowseCategory] = useState<'all' | 'Savoury' | 'Sweet' | 'favorites'>('all');
   const [history, setHistory] = useState<Screen>('home');
 
+  // Sync premium store with the user's DB record when session changes
+  const { isPremium: localPremium, unlockPremium, lockPremium } = usePremium();
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user) {
+      const dbPremium = session.user.isPremium;
+      if (dbPremium && !localPremium) unlockPremium();
+      if (!dbPremium && localPremium) lockPremium();
+    }
+  }, [session, status, localPremium, unlockPremium, lockPremium]);
+
+  const isAdmin = session?.user?.role === 'ADMIN';
+  const tabs = isAdmin
+    ? [...BASE_TABS.slice(0, 4), { id: 'admin' as Screen, label: 'Admin', icon: <Shield className="h-5 w-5" /> }, BASE_TABS[4]]
+    : BASE_TABS;
+
   const navigate = (next: Screen, id?: string) => {
     setHistory(screen);
     setScreen(next);
     if (id) setRecipeId(id);
-    // Reset browse category when navigating to browse from non-home sources
-    if (next === 'browse' && !id) {
-      // keep existing category if coming from home category click (handled separately)
-    }
-    // Scroll to top on navigation
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -80,6 +94,8 @@ export default function Home_() {
         return <ShoppingScreen onNavigate={navigate} />;
       case 'profile':
         return <ProfileScreen onNavigate={navigate} />;
+      case 'admin':
+        return isAdmin ? <AdminScreen onNavigate={navigate} /> : <ProfileScreen onNavigate={navigate} />;
       default:
         return <HomeScreen onNavigate={navigate} onBrowseCategory={navigateToBrowse} />;
     }
@@ -99,8 +115,18 @@ export default function Home_() {
               Aussie<span className="text-primary">Fit</span>
             </span>
           </button>
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <span className="hidden sm:inline">135 recipes</span>
+            {session?.user && (
+              <button
+                onClick={() => signOut({ callbackUrl: '/' })}
+                className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs font-medium transition-colors hover:border-destructive/50 hover:text-destructive"
+                aria-label="Sign out"
+              >
+                <LogOut className="h-3 w-3" aria-hidden="true" />
+                <span className="hidden sm:inline">Sign out</span>
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -112,8 +138,8 @@ export default function Home_() {
 
       {/* Bottom tab navigation */}
       <nav className="sticky bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur-md">
-        <div className="mx-auto flex max-w-5xl items-stretch justify-around px-2 pb-[env(safe-area-inset-bottom)] pt-1">
-          {TABS.map((tab) => {
+        <div className="mx-auto flex max-w-5xl items-stretch justify-around px-1 pb-[env(safe-area-inset-bottom)] pt-1 sm:px-2">
+          {tabs.map((tab) => {
             const active = screen === tab.id || (tab.id === 'browse' && screen === 'recipe');
             return (
               <button

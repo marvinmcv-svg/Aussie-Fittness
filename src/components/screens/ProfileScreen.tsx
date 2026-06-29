@@ -2,8 +2,9 @@
 
 import {
   Crown, Check, Heart, ChefHat, Calendar, ShoppingBasket, Sparkles,
-  Lock, Star, Zap, Infinity as InfinityIcon, Target, X
+  Lock, Star, Zap, Infinity as InfinityIcon, Target, Shield, LogIn, LogOut
 } from 'lucide-react';
+import { useSession, signOut } from 'next-auth/react';
 import { usePremium } from '@/store/premium';
 import { useFavorites } from '@/store/favorites';
 import { useMealPlan } from '@/store/mealPlan';
@@ -14,6 +15,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { AuthModal } from '@/components/auth/AuthModal';
 import { useState } from 'react';
 import type { Screen } from '../page';
 
@@ -22,6 +24,7 @@ interface ProfileScreenProps {
 }
 
 export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
+  const { data: session, status } = useSession();
   const { isPremium, unlockPremium } = usePremium();
   const favorites = useFavorites((s) => s.favorites);
   const mealCount = useMealPlan((s) => s.meals.length);
@@ -31,6 +34,17 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
   const stats = getRecipeStats();
   const [showPaywall, setShowPaywall] = useState(false);
   const [showGoals, setShowGoals] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+
+  const isLoggedIn = status === 'authenticated' && !!session?.user;
+  const isAdmin = session?.user?.role === 'ADMIN';
+  const displayName = session?.user?.name || session?.user?.email?.split('@')[0] || 'Aussie Fitness Cook';
+
+  const openAuth = (mode: 'login' | 'signup') => {
+    setAuthMode(mode);
+    setShowAuth(true);
+  };
 
   return (
     <div className="space-y-6 pb-6">
@@ -40,8 +54,10 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
           {isPremium ? <Crown className="h-10 w-10 text-white" /> : <ChefHat className="h-10 w-10 text-primary" />}
         </div>
         <div>
-          <h1 className="text-xl font-extrabold">Aussie Fitness Cook</h1>
-          <p className="text-sm text-muted-foreground">Your personal macro kitchen</p>
+          <h1 className="text-xl font-extrabold">{displayName}</h1>
+          <p className="text-sm text-muted-foreground">
+            {isLoggedIn ? (session?.user?.email ?? '') : 'Your personal macro kitchen'}
+          </p>
         </div>
         {isPremium ? (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-1.5 text-xs font-bold text-white">
@@ -53,6 +69,44 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
             <Sparkles className="h-3 w-3" />
             Free plan
           </span>
+        )}
+
+        {/* Auth actions */}
+        {!isLoggedIn ? (
+          <div className="mt-2 flex gap-2">
+            <button
+              onClick={() => openAuth('login')}
+              className="inline-flex items-center gap-1.5 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-transform hover:scale-105"
+            >
+              <LogIn className="h-4 w-4" />
+              Sign in
+            </button>
+            <button
+              onClick={() => openAuth('signup')}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-5 py-2 text-sm font-semibold transition-colors hover:border-primary/50"
+            >
+              Sign up
+            </button>
+          </div>
+        ) : (
+          <div className="mt-2 flex gap-2">
+            {isAdmin && (
+              <button
+                onClick={() => onNavigate('admin')}
+                className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/25"
+              >
+                <Shield className="h-4 w-4" />
+                Admin panel
+              </button>
+            )}
+            <button
+              onClick={() => signOut({ callbackUrl: '/' })}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:border-destructive/50 hover:text-destructive"
+            >
+              <LogOut className="h-4 w-4" />
+              Sign out
+            </button>
+          </div>
         )}
       </div>
 
@@ -204,6 +258,9 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
           toast({ title: 'Goals reset', description: 'Restored to default values.' });
         }}
       />
+
+      {/* Auth modal */}
+      <AuthModal open={showAuth} onClose={() => setShowAuth(false)} mode={authMode} />
     </div>
   );
 }

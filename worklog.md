@@ -590,3 +590,44 @@ Stage Summary:
 - Lint: 0 errors, 0 warnings
 - Agent Browser verified: category filter works, favorites toast works, add-to-plan toast works (no auto-navigate), goals progress bars render correctly, goals modal opens with presets, shopping confirmation dialog works
 - No console errors, no runtime errors, no 500s
+
+---
+Task ID: AUTH-ADMIN
+Agent: main
+Task: Build login/signup authentication and full admin interface
+
+Work Log:
+- Installed bcryptjs for password hashing
+- Updated Prisma schema: added password, role (USER/ADMIN), isPremium fields to User model; ran db:push
+- Created NextAuth config (src/lib/auth.ts) with credentials provider, JWT sessions, role/premium in token
+- Added NEXTAUTH_SECRET and NEXTAUTH_URL to .env
+- Created API routes:
+  - /api/auth/[...nextauth] — NextAuth handler (login, session, csrf)
+  - /api/auth/signup — user registration with bcrypt hashing + validation
+  - /api/admin/users — GET (list all) + POST (create user with role/premium)
+  - /api/admin/users/[id] — PATCH (update role/premium/name) + DELETE (with self-protection)
+  - /api/admin/stats — dashboard stats (total/premium/free/admin users, revenue, conversion rate, recipe stats)
+- Created requireAdmin() helper (src/lib/admin.ts) — server-side admin auth check via getServerSession
+- Wrapped app in SessionProvider (src/components/providers/Providers.tsx)
+- Built AuthModal (src/components/auth/AuthModal.tsx) — login/signup toggle, validation, auto-login after signup, error toasts
+- Built AdminScreen (src/components/screens/AdminScreen.tsx):
+  - Dashboard: 4 stat cards (total users, premium users, revenue, conversion rate)
+  - User management table (desktop) + card list (mobile)
+  - Search by email/name, filter by all/premium/free/admin
+  - Per-user actions: upgrade/downgrade premium, grant/remove admin, delete (with confirmation)
+  - Create user modal with name/email/password + premium/admin checkboxes
+  - Optimistic updates with revert on error
+  - Self-protection: admin can't remove own admin or delete self
+- Updated page.tsx: added admin tab (conditional on admin role), syncs premium store with DB record on session change, sign out button in header
+- Updated ProfileScreen: shows login/signup buttons when logged out, user info + admin panel link + sign out when logged in
+- Seeded admin user (admin@aussiefit.com / admin123) and demo user (user@aussiefit.com / user123) via scripts/seed_admin.ts
+
+Stage Summary:
+- Full authentication: signup, login, logout, session management
+- Full admin interface: dashboard stats, user CRUD, premium/admin role management, search/filter
+- Premium status synced between DB and localStorage store on login
+- Admin tab only visible to admins; admin API routes protected server-side
+- Agent Browser verified: signup creates account + auto-login, admin login shows admin tab, admin dashboard shows stats + user table, upgrade-to-premium works with toast
+- Lint: 0 errors, 0 warnings
+- Admin credentials: admin@aussiefit.com / admin123
+- Demo user: user@aussiefit.com / user123
