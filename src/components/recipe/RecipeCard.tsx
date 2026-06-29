@@ -7,6 +7,7 @@ import { ImageWithFallback } from '@/components/recipe/ImageWithFallback';
 import type { Recipe } from '@/types';
 import { useFavorites } from '@/store/favorites';
 import { usePremium } from '@/store/premium';
+import { useToast } from '@/hooks/use-toast';
 
 interface MacroChipsProps {
   recipe: Recipe;
@@ -18,7 +19,7 @@ export function MacroChips({ recipe, variant = 'default' }: MacroChipsProps) {
   return (
     <div className={cn('flex flex-wrap items-center gap-1.5', isCompact && 'gap-1')}>
       <span className="inline-flex items-center gap-1 rounded-md bg-calories/15 px-1.5 py-0.5 text-[10px] font-semibold text-calories">
-        <Flame className="h-2.5 w-2.5" />
+        <Flame className="h-2.5 w-2.5" aria-hidden="true" />
         {recipe.calories}
       </span>
       <span className="inline-flex items-center gap-1 rounded-md bg-protein/15 px-1.5 py-0.5 text-[10px] font-semibold text-protein">
@@ -41,17 +42,37 @@ interface RecipeCardProps {
 }
 
 export function RecipeCard({ recipe, onClick, compact = false }: RecipeCardProps) {
-  const { isFavorite, toggleFavorite } = useFavorites();
-  const { isPremium } = usePremium();
+  // Selectors: only re-render this card when THIS recipe's favorite status changes
+  const fav = useFavorites((s) => s.favorites.includes(recipe.id));
+  const toggleFavorite = useFavorites((s) => s.toggleFavorite);
+  const isPremium = usePremium((s) => s.isPremium);
+  const { toast } = useToast();
   const visual = getRecipeVisual(recipe);
-  const fav = isFavorite(recipe.id);
   const locked = recipe.premium && !isPremium;
 
+  const handleFavorite = (e: React.MouseEvent | React.KeyboardEvent) => {
+    e.stopPropagation();
+    toggleFavorite(recipe.id);
+    toast({
+      title: fav ? 'Removed from favorites' : 'Added to favorites',
+      description: recipe.title,
+    });
+  };
+
   return (
-    <button
+    <div
       onClick={onClick}
+      role="button"
+      tabIndex={0}
+      aria-label={`View recipe: ${recipe.title}. ${recipe.calories} calories, ${recipe.protein}g protein.`}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
       className={cn(
-        'group relative w-full overflow-hidden rounded-2xl border border-border bg-card text-left transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5',
+        'group relative w-full cursor-pointer overflow-hidden rounded-2xl border border-border bg-card text-left transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring'
       )}
     >
@@ -79,37 +100,30 @@ export function RecipeCard({ recipe, onClick, compact = false }: RecipeCardProps
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/10" />
         {/* Top row: fav + lock */}
         <div className="absolute inset-x-0 top-0 flex items-center justify-between p-2">
-          <span
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleFavorite(recipe.id);
-            }}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-black/30 backdrop-blur-sm transition-colors hover:bg-black/50"
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.stopPropagation();
-                toggleFavorite(recipe.id);
-              }
-            }}
+          <button
+            type="button"
+            onClick={handleFavorite}
+            aria-label={fav ? `Remove ${recipe.title} from favorites` : `Add ${recipe.title} to favorites`}
+            aria-pressed={fav}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-black/30 backdrop-blur-sm transition-colors hover:bg-black/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
             <Heart
               className={cn(
                 'h-4 w-4 transition-all',
                 fav ? 'fill-red-500 text-red-500' : 'text-white'
               )}
+              aria-hidden="true"
             />
-          </span>
+          </button>
           {locked && (
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm">
-              <Lock className="h-4 w-4 text-amber-300" />
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm" aria-label="Premium recipe">
+              <Lock className="h-4 w-4 text-amber-300" aria-hidden="true" />
             </span>
           )}
         </div>
         {/* Cook time badge */}
         <div className="absolute bottom-2 left-2 flex items-center gap-1 rounded-md bg-black/40 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
-          <Clock className="h-2.5 w-2.5" />
+          <Clock className="h-2.5 w-2.5" aria-hidden="true" />
           {recipe.cookTime}m
         </div>
         {/* Category badge */}
@@ -129,6 +143,6 @@ export function RecipeCard({ recipe, onClick, compact = false }: RecipeCardProps
           <MacroChips recipe={recipe} variant="compact" />
         </div>
       </div>
-    </button>
+    </div>
   );
 }

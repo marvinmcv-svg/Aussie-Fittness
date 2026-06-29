@@ -19,6 +19,7 @@ export interface Recipe {
   tags: string[];
   sourcePage: number | null;
   premium: boolean;
+  isTotal?: boolean; // true if macros shown are for the whole recipe (not per serving)
 }
 
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';

@@ -12,22 +12,24 @@ import { useFavorites } from '@/store/favorites';
 import { usePremium } from '@/store/premium';
 import { useMealPlan } from '@/store/mealPlan';
 import { useShoppingList } from '@/store/shoppingList';
+import { useToast } from '@/hooks/use-toast';
 import type { MealType } from '@/types';
 import type { Screen } from '../page';
 
-interface RecipeDetailScreenProps {
-  recipeId: string;
-  onNavigate: (screen: Screen, recipeId?: string) => void;
-  onBack: () => void;
-}
-
-const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const DAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const MEAL_TYPES: { value: MealType; label: string; emoji: string }[] = [
   { value: 'breakfast', label: 'Breakfast', emoji: '🍳' },
   { value: 'lunch', label: 'Lunch', emoji: '🥗' },
   { value: 'dinner', label: 'Dinner', emoji: '🍽️' },
   { value: 'snack', label: 'Snack', emoji: '🥤' },
 ];
+
+interface RecipeDetailScreenProps {
+  recipeId: string;
+  onNavigate: (screen: Screen, recipeId?: string) => void;
+  onBack: () => void;
+}
 
 export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetailScreenProps) {
   const recipe = useMemo(() => getRecipeById(recipeId), [recipeId]);
@@ -37,10 +39,12 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
   const [showAddToPlan, setShowAddToPlan] = useState(false);
   const [addedToShopping, setAddedToShopping] = useState(false);
 
-  const { isFavorite, toggleFavorite } = useFavorites();
-  const { isPremium } = usePremium();
-  const { addMeal } = useMealPlan();
-  const { addItems } = useShoppingList();
+  const fav = useFavorites((s) => s.favorites.includes(recipeId));
+  const toggleFavorite = useFavorites((s) => s.toggleFavorite);
+  const isPremium = usePremium((s) => s.isPremium);
+  const addMeal = useMealPlan((s) => s.addMeal);
+  const addItems = useShoppingList((s) => s.addItems);
+  const { toast } = useToast();
 
   if (!recipe) {
     return (
@@ -54,7 +58,6 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
   }
 
   const visual = getRecipeVisual(recipe);
-  const fav = isFavorite(recipe.id);
   const locked = recipe.premium && !isPremium;
   const servingsMultiplier = servings / recipe.servings;
 
@@ -79,13 +82,33 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
   const addToPlan = (day: number, mealType: MealType) => {
     addMeal(recipe.id, day, mealType, servings);
     setShowAddToPlan(false);
-    onNavigate('planner');
+    toast({
+      title: 'Added to meal plan',
+      description: `${recipe.title} → ${DAYS[day]} ${MEAL_TYPES.find((m) => m.value === mealType)?.label}`,
+    });
   };
 
   const addIngredientsToShopping = () => {
-    addItems(recipe.ingredients.map((ing) => ({ name: ing, fromRecipe: recipe.title })));
+    const items = recipe.ingredients.map((ing) => ({
+      name: ing,
+      quantity: servingsMultiplier !== 1 ? `×${servingsMultiplier.toFixed(1)} servings` : undefined,
+      fromRecipe: recipe.title,
+    }));
+    const added = addItems(items);
     setAddedToShopping(true);
-    setTimeout(() => onNavigate('shopping'), 600);
+    toast({
+      title: added < items.length ? `Added ${added} new items` : 'Added to shopping list',
+      description: `${items.length} ingredients from ${recipe.title}${added < items.length ? ` (${items.length - added} already on your list)` : ''}.`,
+    });
+    setTimeout(() => setAddedToShopping(false), 2500);
+  };
+
+  const handleFavorite = () => {
+    toggleFavorite(recipe.id);
+    toast({
+      title: fav ? 'Removed from favorites' : 'Added to favorites',
+      description: recipe.title,
+    });
   };
 
   return (
@@ -111,10 +134,12 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="absolute left-4 top-4 flex gap-2">
           <button
-            onClick={() => toggleFavorite(recipe.id)}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm transition-colors hover:bg-black/60"
+            onClick={handleFavorite}
+            aria-label={fav ? `Remove ${recipe.title} from favorites` : `Add ${recipe.title} to favorites`}
+            aria-pressed={fav}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm transition-colors hover:bg-black/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
-            <Heart className={`h-5 w-5 ${fav ? 'fill-red-500 text-red-500' : 'text-white'}`} />
+            <Heart className={`h-5 w-5 ${fav ? 'fill-red-500 text-red-500' : 'text-white'}`} aria-hidden="true" />
           </button>
         </div>
         {locked && (
@@ -150,9 +175,13 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
       {/* Macros */}
       <div className="rounded-2xl border border-border bg-card p-5">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-semibold">Nutrition (per serving)</h2>
-          {recipe.isTotal && (
-            <span className="text-xs text-muted-foreground">Total recipe macros shown</span>
+          <h2 className="font-semibold">
+            Nutrition {recipe.isTotal ? '(whole recipe)' : '(per serving)'}
+          </h2>
+          {recipe.servings > 1 && (
+            <span className="text-xs text-muted-foreground">
+              {recipe.servings} {recipe.servingsUnit}
+            </span>
           )}
         </div>
         <div className="grid grid-cols-4 gap-2">
@@ -238,7 +267,7 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
         <div className="rounded-2xl border border-primary/30 bg-card p-4">
           <h3 className="mb-3 font-semibold">Add to which day & meal?</h3>
           <div className="mb-3 grid grid-cols-7 gap-1.5">
-            {DAYS.map((d, i) => (
+            {DAYS_SHORT.map((d, i) => (
               <div key={d} className="text-center">
                 <div className="mb-1 text-[10px] text-muted-foreground">{d}</div>
               </div>
@@ -251,7 +280,7 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
                   {mt.emoji} {mt.label}
                 </span>
                 <div className="flex flex-1 gap-1">
-                  {DAYS.map((d, i) => (
+                  {DAYS_SHORT.map((d, i) => (
                     <button
                       key={d}
                       onClick={() => addToPlan(i, mt.value)}

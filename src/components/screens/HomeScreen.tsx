@@ -8,9 +8,10 @@ import type { Screen } from '../page';
 
 interface HomeScreenProps {
   onNavigate: (screen: Screen, recipeId?: string) => void;
+  onBrowseCategory?: (category?: 'all' | 'Savoury' | 'Sweet' | 'favorites') => void;
 }
 
-export function HomeScreen({ onNavigate }: HomeScreenProps) {
+export function HomeScreen({ onNavigate, onBrowseCategory }: HomeScreenProps) {
   const stats = getRecipeStats();
   const featured = getFeaturedRecipes(6);
   const free = getFreeRecipes().slice(0, 8);
@@ -105,14 +106,14 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
             name="Savoury"
             count={stats.savoury}
             gradient="from-emerald-500/20 to-teal-500/10"
-            onClick={() => onNavigate('browse')}
+            onClick={() => onBrowseCategory?.('Savoury')}
           />
           <CategoryCard
             emoji="🍰"
             name="Sweet"
             count={stats.sweet}
             gradient="from-pink-500/20 to-rose-500/10"
-            onClick={() => onNavigate('browse')}
+            onClick={() => onBrowseCategory?.('Sweet')}
           />
         </div>
       </section>

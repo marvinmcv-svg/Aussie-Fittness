@@ -3,6 +3,11 @@
 import { useState, useMemo } from 'react';
 import { Plus, Trash2, Check, X, ShoppingBasket, CheckCircle2 } from 'lucide-react';
 import { useShoppingList } from '@/store/shoppingList';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import type { Screen } from '../page';
 
 interface ShoppingScreenProps {
@@ -17,9 +22,11 @@ const CATEGORY_EMOJI: Record<string, string> = {
 
 export function ShoppingScreen({ onNavigate }: ShoppingScreenProps) {
   const { items, addItem, removeItem, toggleChecked, clearChecked, clearAll } = useShoppingList();
+  const { toast } = useToast();
   const [newName, setNewName] = useState('');
   const [newQty, setNewQty] = useState('');
   const [showAdd, setShowAdd] = useState(false);
+  const [confirmClearAll, setConfirmClearAll] = useState(false);
 
   const grouped = useMemo(() => {
     const g: Record<string, typeof items> = {};
@@ -37,6 +44,7 @@ export function ShoppingScreen({ onNavigate }: ShoppingScreenProps) {
   const handleAdd = () => {
     if (!newName.trim()) return;
     addItem(newName, newQty || undefined);
+    toast({ title: 'Item added', description: newName.trim() });
     setNewName('');
     setNewQty('');
     setShowAdd(false);
@@ -203,21 +211,51 @@ export function ShoppingScreen({ onNavigate }: ShoppingScreenProps) {
         <div className="flex gap-2">
           {checkedCount > 0 && (
             <button
-              onClick={clearChecked}
+              onClick={() => {
+                const count = checkedCount;
+                clearChecked();
+                toast({ title: `Cleared ${count} item${count !== 1 ? 's' : ''}` });
+              }}
               className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
             >
-              <CheckCircle2 className="h-4 w-4 text-protein" />
+              <CheckCircle2 className="h-4 w-4 text-protein" aria-hidden="true" />
               Clear checked ({checkedCount})
             </button>
           )}
           <button
-            onClick={clearAll}
+            onClick={() => setConfirmClearAll(true)}
+            aria-label="Clear entire shopping list"
             className="flex items-center justify-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
       )}
+
+      {/* Clear all confirmation */}
+      <AlertDialog open={confirmClearAll} onOpenChange={setConfirmClearAll}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear entire shopping list?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove all {items.length} item{items.length !== 1 ? 's' : ''} from your shopping list. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                clearAll();
+                setConfirmClearAll(false);
+                toast({ title: 'Shopping list cleared' });
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Clear all
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

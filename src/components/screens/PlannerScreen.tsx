@@ -2,13 +2,18 @@
 
 import { useState, useMemo } from 'react';
 import {
-  Plus, Trash2, X, ChevronLeft, ChevronRight, Flame, Beef,
+  Plus, Trash2, ChevronLeft, ChevronRight, Flame, Beef,
   Wheat, Droplet, ShoppingBasket, CalendarDays
 } from 'lucide-react';
 import { getRecipeById, getRecipeVisual, getAllRecipes } from '@/lib/recipes';
 import { ImageWithFallback } from '@/components/recipe/ImageWithFallback';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from '@/components/ui/dialog';
 import { useMealPlan } from '@/store/mealPlan';
 import { useShoppingList } from '@/store/shoppingList';
+import { useGoals } from '@/store/goals';
+import { useToast } from '@/hooks/use-toast';
 import type { MealType } from '@/types';
 import type { Screen } from '../page';
 
@@ -28,7 +33,13 @@ const MEAL_TYPES: { value: MealType; label: string; emoji: string }[] = [
 export function PlannerScreen({ onNavigate }: PlannerScreenProps) {
   const { meals, removeMeal, clearDay, clearAll } = useMealPlan();
   const { addItems } = useShoppingList();
-  const [activeDay, setActiveDay] = useState(0);
+  const { goals } = useGoals();
+  const { toast } = useToast();
+  // Default to today's day of week (Mon=0 ... Sun=6)
+  const [activeDay, setActiveDay] = useState(() => {
+    const jsDay = new Date().getDay(); // 0=Sun, 1=Mon, ...
+    return jsDay === 0 ? 6 : jsDay - 1; // convert to Mon=0 ... Sun=6
+  });
   const [pickMealType, setPickMealType] = useState<MealType | null>(null);
 
   const dayMeals = useMemo(
@@ -88,18 +99,26 @@ export function PlannerScreen({ onNavigate }: PlannerScreenProps) {
         recipeMap.set(m.recipeId, { servings: m.servings, recipe: r });
       }
     }
-    const items: { name: string; fromRecipe: string }[] = [];
+    const items: { name: string; quantity?: string; fromRecipe: string }[] = [];
     for (const { servings, recipe } of recipeMap.values()) {
       const mult = servings / recipe.servings;
       for (const ing of recipe.ingredients) {
         items.push({
-          name: mult === 1 ? ing : `${ing} (×${mult.toFixed(1)})`,
+          name: ing,
+          quantity: mult !== 1 ? `×${mult.toFixed(1)} servings` : undefined,
           fromRecipe: recipe.title,
         });
       }
     }
-    if (items.length === 0) return;
-    addItems(items);
+    if (items.length === 0) {
+      toast({ title: 'Nothing to import', description: 'Your meal plan is empty.' });
+      return;
+    }
+    const added = addItems(items);
+    toast({
+      title: `Imported ${added} items`,
+      description: `${items.length} ingredients from your meal plan added to shopping list.`,
+    });
     onNavigate('shopping');
   };
 
@@ -141,7 +160,10 @@ export function PlannerScreen({ onNavigate }: PlannerScreenProps) {
           <h2 className="font-semibold">{DAYS[activeDay]} totals</h2>
           {dayMeals.length > 0 && (
             <button
-              onClick={() => clearDay(activeDay)}
+              onClick={() => {
+                clearDay(activeDay);
+                toast({ title: 'Cleared', description: `${DAYS[activeDay]} meal plan cleared.` });
+              }}
               className="text-xs text-destructive hover:underline"
             >
               Clear day
@@ -153,6 +175,22 @@ export function PlannerScreen({ onNavigate }: PlannerScreenProps) {
           <TotalChip icon={<Beef className="h-4 w-4" />} label="Protein" value={dayTotals.protein} unit="g" color="text-protein" bg="bg-protein/10" />
           <TotalChip icon={<Wheat className="h-4 w-4" />} label="Carbs" value={dayTotals.carbs} unit="g" color="text-carbs" bg="bg-carbs/10" />
           <TotalChip icon={<Droplet className="h-4 w-4" />} label="Fats" value={dayTotals.fats} unit="g" color="text-fats" bg="bg-fats/10" />
+        </div>
+        {/* Daily goals progress */}
+        <div className="mt-4 space-y-2 border-t border-border pt-3">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>Daily goals</span>
+            <button
+              onClick={() => onNavigate('profile')}
+              className="text-primary hover:underline"
+            >
+              Edit goals
+            </button>
+          </div>
+          <GoalBar label="Calories" value={dayTotals.calories} goal={goals.calories} color="bg-calories" unit="kcal" />
+          <GoalBar label="Protein" value={dayTotals.protein} goal={goals.protein} color="bg-protein" unit="g" />
+          <GoalBar label="Carbs" value={dayTotals.carbs} goal={goals.carbs} color="bg-carbs" unit="g" />
+          <GoalBar label="Fats" value={dayTotals.fats} goal={goals.fats} color="bg-fats" unit="g" />
         </div>
       </div>
 
@@ -265,10 +303,14 @@ export function PlannerScreen({ onNavigate }: PlannerScreenProps) {
           </button>
           {meals.length > 0 && (
             <button
-              onClick={clearAll}
+              onClick={() => {
+                clearAll();
+                toast({ title: 'Week cleared', description: 'All planned meals removed.' });
+              }}
+              aria-label="Clear entire week"
               className="flex items-center justify-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
             </button>
           )}
         </div>
@@ -337,9 +379,30 @@ function TotalChip({
   );
 }
 
-// Inline recipe picker — lets user pick from a compact list
+function GoalBar({
+  label, value, goal, color, unit,
+}: { label: string; value: number; goal: number; color: string; unit: string }) {
+  const pct = goal > 0 ? Math.min(100, Math.round((value / goal) * 100)) : 0;
+  const over = value > goal;
+  return (
+    <div className="flex items-center gap-2">
+      <span className="w-14 shrink-0 text-[11px] text-muted-foreground">{label}</span>
+      <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+        <div
+          className={`h-full transition-all ${over ? 'bg-destructive' : color}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <span className="w-20 shrink-0 text-right text-[11px] font-medium tabular-nums">
+        {value}<span className="text-muted-foreground">/{goal}{unit}</span>
+      </span>
+    </div>
+  );
+}
+
+// Recipe picker modal — uses shadcn Dialog for accessibility (Escape, focus trap, ARIA)
 function RecipePicker({
-  mealType, day, onClose, onNavigate,
+  mealType, day, onClose,
 }: {
   mealType: MealType;
   day: number;
@@ -347,77 +410,88 @@ function RecipePicker({
   onNavigate: (screen: Screen, recipeId?: string) => void;
 }) {
   const { addMeal } = useMealPlan();
+  const { toast } = useToast();
   const allRecipes = useMemo(() => getAllRecipes(), []);
   const [search, setSearch] = useState('');
 
-  const filtered = allRecipes.filter((r) =>
-    !search || r.title.toLowerCase().includes(search.toLowerCase()) ||
-    r.tags.some((t) => t.toLowerCase().includes(search.toLowerCase()))
-  );
+  const filtered = allRecipes.filter((r) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return r.title.toLowerCase().includes(q) ||
+      r.tags.some((t) => t.toLowerCase().includes(q)) ||
+      r.ingredients.some((i) => i.toLowerCase().includes(q));
+  });
 
   const pick = (recipeId: string) => {
+    const r = getRecipeById(recipeId);
     addMeal(recipeId, day, mealType, 1);
+    toast({
+      title: 'Added to meal plan',
+      description: `${r?.title} → ${DAYS[day]} ${MEAL_TYPES.find((m) => m.value === mealType)?.label}`,
+    });
     onClose();
   };
 
+  const mealLabel = MEAL_TYPES.find((m) => m.value === mealType)?.label;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4" onClick={onClose}>
-      <div
-        className="max-h-[80vh] w-full max-w-2xl overflow-hidden rounded-t-3xl border border-border bg-card sm:rounded-3xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between border-b border-border p-4">
-          <h3 className="font-semibold">Add a recipe to {MEAL_TYPES.find((m) => m.value === mealType)?.label}</h3>
-          <button onClick={onClose} className="rounded-full p-1 hover:bg-muted">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="max-w-2xl gap-0 p-0">
+        <DialogHeader className="border-b border-border p-4">
+          <DialogTitle>Add a recipe to {mealLabel}</DialogTitle>
+          <DialogDescription className="sr-only">
+            Search and select a recipe to add to {DAYS[day]} {mealLabel}.
+          </DialogDescription>
+        </DialogHeader>
         <div className="p-4">
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search recipes..."
-            autoFocus
+            placeholder="Search recipes, ingredients, tags..."
             className="w-full rounded-full border border-border bg-background px-4 py-2 text-sm outline-none focus:border-primary"
           />
         </div>
         <div className="max-h-[50vh] overflow-y-auto custom-scroll px-4 pb-4">
-          <div className="space-y-1.5">
-            {filtered.slice(0, 50).map((r) => {
-              const visual = getRecipeVisual(r);
-              return (
-                <button
-                  key={r.id}
-                  onClick={() => pick(r.id)}
-                  className="flex w-full items-center gap-3 rounded-xl border border-border p-2 text-left transition-colors hover:border-primary hover:bg-primary/5"
-                >
-                  <div className={`relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br ${visual.gradient}`}>
-                    <ImageWithFallback
-                      src={visual.photo}
-                      alt={r.title}
-                      className="absolute inset-0 h-full w-full object-cover"
-                      fallbackClassName="absolute inset-0 flex items-center justify-center text-xl"
-                      fallback={<span>{visual.emoji}</span>}
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium">{r.title}</div>
-                    <div className="text-[10px] text-muted-foreground">
-                      {r.calories} cal · {r.protein}g protein · {r.cookTime}min
+          {filtered.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">No recipes found</p>
+          ) : (
+            <div className="space-y-1.5">
+              {filtered.map((r) => {
+                const visual = getRecipeVisual(r);
+                return (
+                  <button
+                    key={r.id}
+                    onClick={() => pick(r.id)}
+                    className="flex w-full items-center gap-3 rounded-xl border border-border p-2 text-left transition-colors hover:border-primary hover:bg-primary/5"
+                  >
+                    <div className={`relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br ${visual.gradient}`}>
+                      <ImageWithFallback
+                        src={visual.photo}
+                        alt={r.title}
+                        className="absolute inset-0 h-full w-full object-cover"
+                        fallbackClassName="absolute inset-0 flex items-center justify-center text-xl"
+                        fallback={<span>{visual.emoji}</span>}
+                      />
                     </div>
-                  </div>
-                  {r.premium && (
-                    <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-bold text-amber-400">
-                      PRO
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium">{r.title}</div>
+                      <div className="text-[10px] text-muted-foreground">
+                        {r.calories} cal · {r.protein}g protein · {r.cookTime}min
+                      </div>
+                    </div>
+                    {r.premium && (
+                      <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-bold text-amber-400">
+                        PRO
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

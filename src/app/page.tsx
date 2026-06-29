@@ -28,13 +28,27 @@ const TABS: Tab[] = [
 export default function Home_() {
   const [screen, setScreen] = useState<Screen>('home');
   const [recipeId, setRecipeId] = useState<string | undefined>();
+  const [browseCategory, setBrowseCategory] = useState<'all' | 'Savoury' | 'Sweet' | 'favorites'>('all');
   const [history, setHistory] = useState<Screen>('home');
 
   const navigate = (next: Screen, id?: string) => {
     setHistory(screen);
     setScreen(next);
     if (id) setRecipeId(id);
+    // Reset browse category when navigating to browse from non-home sources
+    if (next === 'browse' && !id) {
+      // keep existing category if coming from home category click (handled separately)
+    }
     // Scroll to top on navigation
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const navigateToBrowse = (category?: 'all' | 'Savoury' | 'Sweet' | 'favorites') => {
+    setBrowseCategory(category ?? 'all');
+    setHistory(screen);
+    setScreen('browse');
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -51,14 +65,14 @@ export default function Home_() {
   const renderScreen = () => {
     switch (screen) {
       case 'home':
-        return <HomeScreen onNavigate={navigate} />;
+        return <HomeScreen onNavigate={navigate} onBrowseCategory={navigateToBrowse} />;
       case 'browse':
-        return <BrowseScreen onNavigate={navigate} />;
+        return <BrowseScreen onNavigate={navigate} initialCategory={browseCategory} />;
       case 'recipe':
         return recipeId ? (
           <RecipeDetailScreen recipeId={recipeId} onNavigate={navigate} onBack={goBack} />
         ) : (
-          <BrowseScreen onNavigate={navigate} />
+          <BrowseScreen onNavigate={navigate} initialCategory={browseCategory} />
         );
       case 'planner':
         return <PlannerScreen onNavigate={navigate} />;
@@ -67,7 +81,7 @@ export default function Home_() {
       case 'profile':
         return <ProfileScreen onNavigate={navigate} />;
       default:
-        return <HomeScreen onNavigate={navigate} />;
+        return <HomeScreen onNavigate={navigate} onBrowseCategory={navigateToBrowse} />;
     }
   };
 

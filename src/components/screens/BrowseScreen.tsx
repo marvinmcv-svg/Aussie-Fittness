@@ -1,14 +1,16 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Search, SlidersHorizontal, X, ArrowUpDown } from 'lucide-react';
+import { Search, SlidersHorizontal, X, ArrowUpDown, Heart } from 'lucide-react';
 import { RecipeCard } from '@/components/recipe/RecipeCard';
 import { getAllRecipes, getAllTags } from '@/lib/recipes';
+import { useFavorites } from '@/store/favorites';
 import type { Recipe, SortOption, RecipeFilters } from '@/types';
 import type { Screen } from '../page';
 
 interface BrowseScreenProps {
   onNavigate: (screen: Screen, recipeId?: string) => void;
+  initialCategory?: 'all' | 'Savoury' | 'Sweet' | 'favorites';
 }
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
@@ -21,12 +23,13 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'title-asc', label: 'A → Z' },
 ];
 
-export function BrowseScreen({ onNavigate }: BrowseScreenProps) {
+export function BrowseScreen({ onNavigate, initialCategory = 'all' }: BrowseScreenProps) {
   const allRecipes = useMemo(() => getAllRecipes(), []);
   const tags = useMemo(() => getAllTags(), []);
+  const favorites = useFavorites((s) => s.favorites);
   const [filters, setFilters] = useState<RecipeFilters>({
     search: '',
-    category: 'all',
+    category: initialCategory === 'Savoury' || initialCategory === 'Sweet' ? initialCategory : 'all',
     tag: 'all',
     maxCalories: null,
     minProtein: null,
@@ -35,9 +38,11 @@ export function BrowseScreen({ onNavigate }: BrowseScreenProps) {
   });
   const [sort, setSort] = useState<SortOption>('relevance');
   const [showFilters, setShowFilters] = useState(false);
+  const [favoritesOnly, setFavoritesOnly] = useState(initialCategory === 'favorites');
 
   const filtered = useMemo(() => {
     let result = allRecipes.filter((r) => {
+      if (favoritesOnly && !favorites.includes(r.id)) return false;
       if (filters.search.trim()) {
         const q = filters.search.toLowerCase();
         const inTitle = r.title.toLowerCase().includes(q);
@@ -64,7 +69,7 @@ export function BrowseScreen({ onNavigate }: BrowseScreenProps) {
       case 'title-asc': result.sort((a, b) => a.title.localeCompare(b.title)); break;
     }
     return result;
-  }, [allRecipes, filters, sort]);
+  }, [allRecipes, filters, sort, favoritesOnly, favorites]);
 
   const activeFilterCount = [
     filters.category !== 'all',
@@ -85,20 +90,22 @@ export function BrowseScreen({ onNavigate }: BrowseScreenProps) {
       maxCookTime: null,
       premiumFilter: 'all',
     });
+    setFavoritesOnly(false);
   };
 
   return (
     <div className="space-y-4 pb-6">
       {/* Search bar */}
-      <div className="sticky top-0 z-10 -mx-4 bg-background/80 px-4 py-3 backdrop-blur-md">
+      <div className="sticky top-[3.25rem] z-20 -mx-4 bg-background/80 px-4 py-3 backdrop-blur-md">
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
             <input
               type="text"
               value={filters.search}
               onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
               placeholder="Search recipes, ingredients, tags..."
+              aria-label="Search recipes"
               className="w-full rounded-full border border-border bg-card py-2.5 pl-10 pr-4 text-sm outline-none transition-colors focus:border-primary"
             />
             {filters.search && (
@@ -125,10 +132,27 @@ export function BrowseScreen({ onNavigate }: BrowseScreenProps) {
 
         {/* Quick category chips */}
         <div className="mt-3 flex gap-2 overflow-x-auto pb-1 custom-scroll">
+          <button
+            onClick={() => setFavoritesOnly((v) => !v)}
+            aria-pressed={favoritesOnly}
+            className={`shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+              favoritesOnly
+                ? 'bg-red-500 text-white'
+                : 'bg-card border border-border hover:border-primary/50'
+            }`}
+          >
+            <Heart className={`h-3 w-3 ${favoritesOnly ? 'fill-white' : ''}`} aria-hidden="true" />
+            Favorites
+            {favorites.length > 0 && (
+              <span className="ml-0.5 rounded-full bg-black/20 px-1 text-[10px]">{favorites.length}</span>
+            )}
+          </button>
+          <div className="shrink-0 w-px self-stretch bg-border" aria-hidden="true" />
           {(['all', 'Savoury', 'Sweet'] as const).map((c) => (
             <button
               key={c}
               onClick={() => setFilters((f) => ({ ...f, category: c }))}
+              aria-pressed={filters.category === c}
               className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                 filters.category === c
                   ? 'bg-primary text-primary-foreground'
@@ -142,6 +166,7 @@ export function BrowseScreen({ onNavigate }: BrowseScreenProps) {
             <button
               key={t}
               onClick={() => setFilters((f) => ({ ...f, tag: f.tag === t ? 'all' : t }))}
+              aria-pressed={filters.tag === t}
               className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                 filters.tag === t
                   ? 'bg-primary text-primary-foreground'
@@ -242,15 +267,30 @@ export function BrowseScreen({ onNavigate }: BrowseScreenProps) {
       {/* Results grid */}
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-          <Search className="h-10 w-10 text-muted-foreground/50" />
-          <div>
-            <p className="font-semibold">No recipes found</p>
-            <p className="text-sm text-muted-foreground">Try adjusting your filters</p>
-          </div>
-          {activeFilterCount > 0 && (
-            <button onClick={clearFilters} className="text-sm text-primary hover:underline">
-              Clear filters
-            </button>
+          {favoritesOnly ? (
+            <>
+              <Heart className="h-10 w-10 text-muted-foreground/50" />
+              <div>
+                <p className="font-semibold">No favorites yet</p>
+                <p className="text-sm text-muted-foreground">Tap the heart on any recipe to save it here</p>
+              </div>
+              <button onClick={() => setFavoritesOnly(false)} className="text-sm text-primary hover:underline">
+                Browse all recipes
+              </button>
+            </>
+          ) : (
+            <>
+              <Search className="h-10 w-10 text-muted-foreground/50" />
+              <div>
+                <p className="font-semibold">No recipes found</p>
+                <p className="text-sm text-muted-foreground">Try adjusting your filters</p>
+              </div>
+              {(activeFilterCount > 0 || favoritesOnly) && (
+                <button onClick={clearFilters} className="text-sm text-primary hover:underline">
+                  Clear filters
+                </button>
+              )}
+            </>
           )}
         </div>
       ) : (
