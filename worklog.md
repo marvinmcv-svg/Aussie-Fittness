@@ -631,3 +631,22 @@ Stage Summary:
 - Lint: 0 errors, 0 warnings
 - Admin credentials: admin@aussiefit.com / admin123
 - Demo user: user@aussiefit.com / user123
+
+---
+Task ID: AUTH-FIX
+Agent: main
+Task: Fix admin user not having admin privileges (403 on admin API)
+
+Work Log:
+- Root cause: NEXTAUTH_SECRET env var was not loaded by the server. The earlier `echo >> .env` command didn't persist — .env only contained DATABASE_URL
+- Without the secret, getServerSession() in admin API routes couldn't decode the JWT, returning null → 403 Unauthorized on all /api/admin/* routes
+- The client-side session appeared valid because NextAuth route handlers auto-derive a secret in dev mode, but getServerSession() does not
+- Created debug-session route to confirm: hasSecret was false, session was null on server side
+- Fix: rewrote .env with cat > (DATABASE_URL, NEXTAUTH_SECRET, NEXTAUTH_URL), restarted dev server, cleared stale browser cookies, re-logged in
+- Verified: getServerSession now returns role:ADMIN, admin stats API returns 200 with full dashboard data (3 users, $19.98 revenue, 66.7% conversion)
+- Removed debug route after fix
+
+Stage Summary:
+- Admin privileges now work correctly after login
+- Admin dashboard renders with live stats and user management table
+- All admin API routes (stats, users CRUD) return 200 for authenticated admins
