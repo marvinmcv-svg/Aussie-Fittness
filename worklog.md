@@ -749,3 +749,43 @@ Stage Summary:
 - Demo mode works without Stripe for development/testing
 - Admin can still manually grant premium via admin panel
 - JWT auto-refreshes premium status every 60 seconds
+
+---
+Task ID: PHASE-3
+Agent: main
+Task: Phase 3 — persist user data to database (favorites, meal plan, shopping)
+
+Work Log:
+1. PRISMA SCHEMA: Added 3 new models — Favorite (userId+recipeId unique), MealPlanEntry (recipeId, day, mealType, servings), ShoppingItem (name, quantity, category, checked, fromRecipe). All with User relations and onDelete: Cascade. Ran db:push.
+2. API ROUTES (7 new):
+   - GET/POST /api/user/favorites — list/add favorites (upsert for dedup)
+   - DELETE /api/user/favorites/[id] — remove by recipeId
+   - GET/POST /api/user/mealplan — list/add meal entries (zod validated)
+   - PATCH/DELETE /api/user/mealplan/[id] — update servings / delete
+   - GET/POST /api/user/shopping — list/add shopping items
+   - PATCH/DELETE /api/user/shopping/[id] — update / delete
+   - POST /api/user/sync — bulk upload+download (merges localStorage into DB, returns merged result)
+3. STORE UPDATES: All 3 Zustand stores (favorites, mealPlan, shoppingList) now have:
+   - _synced flag (false = guest mode, true = server-backed)
+   - _replaceAll() method (used during sync to replace local state)
+   - _setSynced() method
+   - Every mutation (add/remove/toggle/clear) now fires an API call if _synced=true (optimistic update + fire-and-forget server sync)
+   - partialize() excludes _synced from persistence (always starts false on reload)
+4. SYNC HOOK: useUserDataSync() in src/hooks/use-user-data-sync.ts:
+   - On login: reads local localStorage data, POSTs to /api/user/sync, replaces local state with merged server response
+   - On logout: sets _synced=false on all stores (guest mode)
+5. PAGE.TSX: Calls useUserDataSync() to trigger sync on auth state changes
+
+Verification:
+- Guest mode: added 2 favorites + 1 shopping item → stored in localStorage ✓
+- Login: guest data uploaded to DB (favorites: r001, r002; shopping: "Guest Test Item") ✓
+- Clear browser state → login: data restored from server ✓
+- Add favorite while logged in: instantly synced to DB (r003 appeared) ✓
+- Lint: 0 errors | Build: passes (all 7 new routes) ✓
+
+Stage Summary:
+- User data now persists to the database, not just localStorage
+- Data syncs across devices/browsers — log in anywhere, your data is there
+- Guest mode (logged out) still uses localStorage for immediate UX
+- On first login, local guest data is automatically migrated to the DB
+- All mutations are optimistic (instant UI) + server-synced (durable)

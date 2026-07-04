@@ -6,6 +6,12 @@ import type { ShoppingItem } from '@/types';
 
 interface ShoppingListState {
   items: ShoppingItem[];
+  /** Whether data has been synced with the server (false = guest mode) */
+  _synced: boolean;
+  /** Replace all items (used during server sync) */
+  _replaceAll: (items: ShoppingItem[]) => void;
+  /** Mark as synced with server */
+  _setSynced: (synced: boolean) => void;
   addItem: (name: string, quantity?: string, category?: string, fromRecipe?: string) => void;
   addItems: (items: { name: string; quantity?: string; fromRecipe?: string }[]) => number;
   removeItem: (id: string) => void;
@@ -15,7 +21,6 @@ interface ShoppingListState {
   clearAll: () => void;
 }
 
-// Generate a unique ID (crypto.randomUUID in modern browsers, fallback otherwise)
 function uid(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
     return `s_${crypto.randomUUID()}`;
@@ -23,22 +28,18 @@ function uid(): string {
   return `s_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
-// Normalize an ingredient name for dedup comparison.
-// Strips quantities/numbers and lowercases.
 function normalizeName(name: string): string {
   return name
     .toLowerCase()
     .replace(/\d+\s*(g|kg|ml|l|tbsp|tsp|cups?|cloves?|pieces?|eggs?|cans?)?\b/gi, '')
-    .replace(/\(.*?\)/g, '') // remove parenthetical notes
+    .replace(/\(.*?\)/g, '')
     .replace(/[^a-z\s]/g, '')
     .trim()
     .replace(/\s+/g, ' ');
 }
 
-// Improved category guesser with word-boundary matching and larger keyword map.
 function guessCategory(name: string): string {
   const n = ' ' + name.toLowerCase() + ' ';
-  // Use word-boundary-ish matching to avoid "eggplant" → Protein, "black pepper" → Vegetables
   const has = (words: string[]) => words.some((w) => n.includes(' ' + w + ' ') || n.includes(' ' + w + 's ') || n.includes(' ' + w + 'es '));
 
   if (has(['chicken', 'beef', 'mince', 'pork', 'bacon', 'turkey', 'fish', 'salmon', 'tuna', 'egg', 'prawn', 'shrimp', 'sausage', 'ham', 'lamb', 'duck', 'protein powder'])) return 'Protein';
@@ -50,7 +51,6 @@ function guessCategory(name: string): string {
   return 'Other';
 }
 
-// Merge a quantity string into an existing one (best-effort text concatenation)
 function mergeQuantities(existing: string | undefined, incoming: string | undefined): string | undefined {
   if (!existing && !incoming) return undefined;
   if (!existing) return incoming;
@@ -63,11 +63,13 @@ export const useShoppingList = create<ShoppingListState>()(
   persist(
     (set, get) => ({
       items: [],
+      _synced: false,
+      _replaceAll: (items) => set({ items, _synced: true }),
+      _setSynced: (synced) => set({ _synced: synced }),
       addItem: (name, quantity, category, fromRecipe) => {
         const trimmedName = name.trim();
         if (!trimmedName) return;
         const norm = normalizeName(trimmedName);
-        // Dedup: if an unchecked item with the same normalized name exists, merge quantity
         const existing = get().items.find(
           (i) => !i.checked && normalizeName(i.name) === norm
         );
@@ -83,21 +85,49 @@ export const useShoppingList = create<ShoppingListState>()(
                 : i
             ),
           }));
+          // Server sync: update the existing item's quantity
+          if (get()._synced) {
+            fetch(`/api/user/shopping/${existing.id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ quantity: mergeQuantities(existing.quantity, quantity?.trim()) }),
+            }).catch(() => {});
+          }
           return;
         }
-        set((state) => ({
-          items: [
-            ...state.items,
-            {
-              id: uid(),
-              name: trimmedName,
-              quantity: quantity?.trim() || undefined,
-              category: category || guessCategory(trimmedName),
-              checked: false,
-              fromRecipe,
-            },
-          ],
-        }));
+        const newItem: ShoppingItem = {
+          id: uid(),
+          name: trimmedName,
+          quantity: quantity?.trim() || undefined,
+          category: category || guessCategory(trimmedName),
+          checked: false,
+          fromRecipe,
+        };
+        set((state) => ({ items: [...state.items, newItem] }));
+        // Server sync
+        if (get()._synced) {
+          fetch('/api/user/shopping', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: newItem.name,
+              quantity: newItem.quantity,
+              category: newItem.category,
+              fromRecipe: newItem.fromRecipe,
+            }),
+          })
+            .then((r) => r.json())
+            .then((data) => {
+              if (data.id) {
+                set((state) => ({
+                  items: state.items.map((i) =>
+                    i.id === newItem.id ? { ...i, id: data.id } : i
+                  ),
+                }));
+              }
+            })
+            .catch(() => {});
+        }
       },
       addItems: (newItems) => {
         let added = 0;
@@ -131,29 +161,92 @@ export const useShoppingList = create<ShoppingListState>()(
             };
             set((state) => ({ items: [...state.items, newItem] }));
             added++;
+            // Server sync
+            if (get()._synced) {
+              fetch('/api/user/shopping', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  name: newItem.name,
+                  quantity: newItem.quantity,
+                  category: newItem.category,
+                  fromRecipe: newItem.fromRecipe,
+                }),
+              })
+                .then((r) => r.json())
+                .then((data) => {
+                  if (data.id) {
+                    set((state) => ({
+                      items: state.items.map((i) =>
+                        i.id === newItem.id ? { ...i, id: data.id } : i
+                      ),
+                    }));
+                  }
+                })
+                .catch(() => {});
+            }
           }
         }
         return added;
       },
-      removeItem: (id) =>
-        set((state) => ({ items: state.items.filter((i) => i.id !== id) })),
-      toggleChecked: (id) =>
+      removeItem: (id) => {
+        set((state) => ({ items: state.items.filter((i) => i.id !== id) }));
+        if (get()._synced) {
+          fetch(`/api/user/shopping/${id}`, { method: 'DELETE' }).catch(() => {});
+        }
+      },
+      toggleChecked: (id) => {
+        const item = get().items.find((i) => i.id === id);
+        if (!item) return;
+        const newChecked = !item.checked;
         set((state) => ({
           items: state.items.map((i) =>
-            i.id === id ? { ...i, checked: !i.checked } : i
+            i.id === id ? { ...i, checked: newChecked } : i
           ),
-        })),
-      updateItem: (id, updates) =>
+        }));
+        if (get()._synced) {
+          fetch(`/api/user/shopping/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ checked: newChecked }),
+          }).catch(() => {});
+        }
+      },
+      updateItem: (id, updates) => {
         set((state) => ({
           items: state.items.map((i) => (i.id === id ? { ...i, ...updates } : i)),
-        })),
-      clearChecked: () =>
-        set((state) => ({ items: state.items.filter((i) => !i.checked) })),
-      clearAll: () => set({ items: [] }),
+        }));
+        if (get()._synced) {
+          fetch(`/api/user/shopping/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updates),
+          }).catch(() => {});
+        }
+      },
+      clearChecked: () => {
+        const toRemove = get().items.filter((i) => i.checked);
+        set((state) => ({ items: state.items.filter((i) => !i.checked) }));
+        if (get()._synced) {
+          for (const item of toRemove) {
+            fetch(`/api/user/shopping/${item.id}`, { method: 'DELETE' }).catch(() => {});
+          }
+        }
+      },
+      clearAll: () => {
+        const all = get().items;
+        set({ items: [] });
+        if (get()._synced) {
+          for (const item of all) {
+            fetch(`/api/user/shopping/${item.id}`, { method: 'DELETE' }).catch(() => {});
+          }
+        }
+      },
     }),
     {
       name: 'aussie_fitness_shopping',
       storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({ items: state.items }),
     }
   )
 );

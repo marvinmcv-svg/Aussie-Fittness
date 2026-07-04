@@ -12,6 +12,7 @@ import { ProfileScreen } from '@/components/screens/ProfileScreen';
 import { AdminScreen } from '@/components/screens/AdminScreen';
 import { usePremium } from '@/store/premium';
 import { useToast } from '@/hooks/use-toast';
+import { useUserDataSync } from '@/hooks/use-user-data-sync';
 import type { Screen } from '@/types';
 
 interface Tab {
@@ -45,6 +46,9 @@ export default function Home_() {
       _setPremium(false);
     }
   }, [session, status, _setPremium]);
+
+  // Sync user data (favorites, meal plan, shopping) with server on login/logout
+  useUserDataSync();
 
   // Handle Stripe redirect back (success/cancel query param)
   const { toast } = useToast();

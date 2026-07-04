@@ -10,14 +10,50 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  name         String?
-  password     String
-  role         String   @default("USER") // "USER" | "ADMIN"
-  isPremium    Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            String           @id @default(cuid())
+  email         String           @unique
+  name          String?
+  password      String
+  role          String           @default("USER") // "USER" | "ADMIN"
+  isPremium     Boolean          @default(false)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  favorites     Favorite[]
+  mealPlan      MealPlanEntry[]
+  shoppingItems ShoppingItem[]
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  recipeId  String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, recipeId]) // prevent duplicate favorites
+}
+
+model MealPlanEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  recipeId  String
+  day       Int // 0-6 (Mon-Sun)
+  mealType  String // "breakfast" | "lunch" | "dinner" | "snack"
+  servings  Int      @default(1)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ShoppingItem {
+  id         String   @id @default(cuid())
+  userId     String
+  name       String
+  quantity   String?
+  category   String
+  checked    Boolean  @default(false)
+  fromRecipe String?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Post {
