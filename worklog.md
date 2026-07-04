@@ -692,3 +692,30 @@ Stage Summary:
 - Admin privileges work reliably (fallback secret prevents 403s)
 - All core features verified working end-to-end via Agent Browser
 - Lint: 0 errors, 0 warnings
+
+---
+Task ID: PHASE-1
+Agent: main
+Task: Phase 1 production hardening — fix blockers
+
+Work Log:
+1. BUILD FIX: Excluded examples/, mini-services/, scripts/, skills/, upload/, download/ from tsconfig.json. Moved Screen type from page.tsx to src/types/index.ts to break circular import. Build now passes.
+2. SECRET FIX: Removed hardcoded NEXTAUTH_SECRET fallback. Created src/lib/env.ts that validates required env vars (DATABASE_URL, NEXTAUTH_SECRET, NEXTAUTH_URL) and throws on startup if missing. Updated auth.ts to import from env.
+3. ZOD VALIDATION: Created src/lib/validation.ts with signupSchema, adminCreateUserSchema, adminUpdateUserSchema. Updated all 3 API routes (signup, admin users, admin users/[id]) to use parseBody() — returns 400 with clear error messages on invalid input.
+4. RATE LIMITING: Created src/lib/rateLimit.ts (in-memory, auto-cleanup). Signup: 5 requests/IP/15min. Login: 10 attempts/IP/15min. Returns 429 with Retry-After header.
+5. SECURITY HEADERS: Updated next.config.ts with async headers() for all routes: X-Frame-Options DENY, X-Content-Type-Options nosniff, HSTS, Referrer-Policy, Permissions-Policy, Content-Security-Policy, Cross-Origin-Opener/Resource-Policy.
+
+Verification:
+- Lint: 0 errors, 0 warnings
+- Build: passes (all 140 static pages generated)
+- Security headers verified present via curl
+- Zod validation: short password → 400, invalid email → 400, valid → 200
+- Rate limiting: rapid signups blocked with 429 after limit exceeded
+- App renders correctly in browser, no console errors
+
+Stage Summary:
+- All 5 Phase 1 blockers fixed and verified
+- Production build succeeds
+- Auth endpoints protected with rate limiting + input validation
+- Security headers on all responses
+- App ready for Phase 2 (real premium + payments)

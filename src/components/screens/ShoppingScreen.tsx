@@ -8,7 +8,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import type { Screen } from '../page';
+import type { Screen } from '@/types';
 
 interface ShoppingScreenProps {
   onNavigate: (screen: Screen, recipeId?: string) => void;

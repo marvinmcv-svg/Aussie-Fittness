@@ -52,3 +52,6 @@ export interface RecipeFilters {
   maxCookTime: number | null;
   premiumFilter: 'all' | 'free' | 'premium';
 }
+
+// App navigation screens (used by page.tsx + all screen components)
+export type Screen = 'home' | 'browse' | 'recipe' | 'planner' | 'shopping' | 'profile' | 'admin';

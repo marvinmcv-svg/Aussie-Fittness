@@ -14,7 +14,7 @@ import { useMealPlan } from '@/store/mealPlan';
 import { useShoppingList } from '@/store/shoppingList';
 import { useToast } from '@/hooks/use-toast';
 import type { MealType } from '@/types';
-import type { Screen } from '../page';
+import type { Screen } from '@/types';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const DAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];

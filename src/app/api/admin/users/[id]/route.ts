@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin';
 import { db } from '@/lib/db';
+import { adminUpdateUserSchema, parseBody } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,9 +18,14 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
+    const parsed = parseBody(adminUpdateUserSchema, body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error }, { status: 400 });
+    }
+    const updates = parsed.data;
 
     // Prevent admin from removing their own admin status (lockout protection)
-    if (session.user.id === id && body.role && body.role !== 'ADMIN') {
+    if (session.user.id === id && updates.role && updates.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'You cannot remove your own admin privileges' },
         { status: 400 }
@@ -28,9 +34,9 @@ export async function PATCH(
 
     // Build update data — only allow specific fields
     const updateData: Record<string, unknown> = {};
-    if (body.name !== undefined) updateData.name = body.name;
-    if (body.role !== undefined) updateData.role = body.role === 'ADMIN' ? 'ADMIN' : 'USER';
-    if (body.isPremium !== undefined) updateData.isPremium = Boolean(body.isPremium);
+    if (updates.name !== undefined) updateData.name = updates.name;
+    if (updates.role !== undefined) updateData.role = updates.role;
+    if (updates.isPremium !== undefined) updateData.isPremium = updates.isPremium;
 
     const updated = await db.user.update({
       where: { id },

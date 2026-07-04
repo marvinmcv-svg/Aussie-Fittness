@@ -15,7 +15,7 @@ import { useShoppingList } from '@/store/shoppingList';
 import { useGoals } from '@/store/goals';
 import { useToast } from '@/hooks/use-toast';
 import type { MealType } from '@/types';
-import type { Screen } from '../page';
+import type { Screen } from '@/types';
 
 interface PlannerScreenProps {
   onNavigate: (screen: Screen, recipeId?: string) => void;

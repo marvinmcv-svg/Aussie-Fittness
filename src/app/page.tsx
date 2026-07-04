@@ -11,8 +11,7 @@ import { ShoppingScreen } from '@/components/screens/ShoppingScreen';
 import { ProfileScreen } from '@/components/screens/ProfileScreen';
 import { AdminScreen } from '@/components/screens/AdminScreen';
 import { usePremium } from '@/store/premium';
-
-export type Screen = 'home' | 'browse' | 'recipe' | 'planner' | 'shopping' | 'profile' | 'admin';
+import type { Screen } from '@/types';
 
 interface Tab {
   id: Screen;

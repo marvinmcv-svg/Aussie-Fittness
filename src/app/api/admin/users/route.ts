@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { requireAdmin } from '@/lib/admin';
 import { db } from '@/lib/db';
+import { adminCreateUserSchema, parseBody } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,21 +36,12 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { email, password, name, role, isPremium } = await request.json();
-
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      );
+    const body = await request.json();
+    const parsed = parseBody(adminCreateUserSchema, body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
-
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: 'Password must be at least 6 characters' },
-        { status: 400 }
-      );
-    }
+    const { email, password, name, role, isPremium } = parsed.data;
 
     const normalizedEmail = email.toLowerCase().trim();
 

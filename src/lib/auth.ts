@@ -2,6 +2,8 @@ import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { db } from '@/lib/db';
+import { env } from '@/lib/env';
+import { rateLimit } from '@/lib/rateLimit';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -11,9 +13,16 @@ export const authOptions: NextAuthOptions = {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) {
           throw new Error('Email and password are required');
+        }
+
+        // Rate limit: 10 login attempts per IP per 15 minutes
+        const ip = req?.headers?.['x-forwarded-for']?.toString().split(',')[0] ?? 'unknown';
+        const { allowed } = rateLimit(`login:${ip}`, 10, 15 * 60 * 1000);
+        if (!allowed) {
+          throw new Error('Too many login attempts. Please try again later.');
         }
 
         const user = await db.user.findUnique({
@@ -61,7 +70,7 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
-  secret: process.env.NEXTAUTH_SECRET || 'aussie-fitness-cookbook-secret-key-2026-very-secure-fallback',
+  secret: env.NEXTAUTH_SECRET,
 };
 
 // Extend the type declarations

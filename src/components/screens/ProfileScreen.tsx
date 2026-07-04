@@ -17,7 +17,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { useState } from 'react';
-import type { Screen } from '../page';
+import type { Screen } from '@/types';
 
 interface ProfileScreenProps {
   onNavigate: (screen: Screen, recipeId?: string) => void;

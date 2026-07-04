@@ -4,7 +4,7 @@ import { Flame, TrendingUp, Sparkles, Crown, ChevronRight, Clock, Egg } from 'lu
 import { RecipeCard } from '@/components/recipe/RecipeCard';
 import { getRecipeStats, getFeaturedRecipes, getFreeRecipes } from '@/lib/recipes';
 import { usePremium } from '@/store/premium';
-import type { Screen } from '../page';
+import type { Screen } from '@/types';
 
 interface HomeScreenProps {
   onNavigate: (screen: Screen, recipeId?: string) => void;

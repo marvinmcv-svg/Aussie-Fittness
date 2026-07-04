@@ -6,7 +6,7 @@ import { RecipeCard } from '@/components/recipe/RecipeCard';
 import { getAllRecipes, getAllTags } from '@/lib/recipes';
 import { useFavorites } from '@/store/favorites';
 import type { Recipe, SortOption, RecipeFilters } from '@/types';
-import type { Screen } from '../page';
+import type { Screen } from '@/types';
 
 interface BrowseScreenProps {
   onNavigate: (screen: Screen, recipeId?: string) => void;

@@ -13,7 +13,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import type { Screen } from '../page';
+import type { Screen } from '@/types';
 
 interface AdminScreenProps {
   onNavigate: (screen: Screen, recipeId?: string) => void;
