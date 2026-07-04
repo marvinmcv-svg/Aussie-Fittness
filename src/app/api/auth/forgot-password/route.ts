@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { env } from '@/lib/env';
 import { z } from 'zod';
 import { rateLimit } from '@/lib/rateLimit';
+import { sendPasswordResetEmail } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,17 +69,8 @@ export async function POST(request: Request) {
     // Build the reset URL
     const resetUrl = `${env.NEXTAUTH_URL}/?reset=${token}`;
 
-    // In production, send email here. In dev, log to console.
-    if (env.NODE_ENV === 'production' && process.env.RESEND_API_KEY) {
-      // TODO: Integrate Resend API
-      // await resend.emails.send({ ... });
-      console.warn('[EMAIL] Production email sending not yet configured');
-    } else {
-      console.log('\n📧 PASSWORD RESET EMAIL (dev mode)');
-      console.log(`   To: ${user.email}`);
-      console.log(`   Reset URL: ${resetUrl}`);
-      console.log('');
-    }
+    // Send the email (uses Resend if configured, falls back to console.log)
+    await sendPasswordResetEmail(user.email!, resetUrl);
 
     return NextResponse.json({ success: true });
   } catch (error) {

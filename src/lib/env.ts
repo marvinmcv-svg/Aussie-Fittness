@@ -34,4 +34,5 @@ export const env = {
   STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
   STRIPE_PRICE_ID: process.env.STRIPE_PRICE_ID,
   STRIPE_ENABLED: stripeConfigured,
+  RESEND_API_KEY: process.env.RESEND_API_KEY,
 } as const;
