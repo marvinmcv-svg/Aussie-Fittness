@@ -29,10 +29,25 @@ const BASE_TABS: Tab[] = [
   { id: 'profile', label: 'Profile', icon: <User className="h-5 w-5" /> },
 ];
 
+// Read initial screen/recipe from URL on first load (deep linking)
+function getInitialScreen(): { screen: Screen; recipeId?: string } {
+  if (typeof window === 'undefined') return { screen: 'home' };
+  const params = new URLSearchParams(window.location.search);
+  const recipeParam = params.get('recipe');
+  const tabParam = params.get('tab');
+  if (recipeParam) return { screen: 'recipe', recipeId: recipeParam };
+  if (tabParam) {
+    const validTabs: Screen[] = ['home', 'browse', 'planner', 'shopping', 'profile'];
+    if (validTabs.includes(tabParam as Screen)) return { screen: tabParam as Screen };
+  }
+  return { screen: 'home' };
+}
+
 export default function Home_() {
   const { data: session, status } = useSession();
-  const [screen, setScreen] = useState<Screen>('home');
-  const [recipeId, setRecipeId] = useState<string | undefined>();
+  const [initial] = useState(getInitialScreen);
+  const [screen, setScreen] = useState<Screen>(initial.screen);
+  const [recipeId, setRecipeId] = useState<string | undefined>(initial.recipeId);
   const [browseCategory, setBrowseCategory] = useState<'all' | 'Savoury' | 'Sweet' | 'favorites'>('all');
   const [history, setHistory] = useState<Screen>('home');
 
@@ -65,6 +80,25 @@ export default function Home_() {
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, [toast]);
+
+  // Update URL when screen/recipe changes (for shareable deep links)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    // Only manage ?recipe= and ?tab= — leave ?payment= and ?reset= alone
+    if (screen === 'recipe' && recipeId) {
+      url.searchParams.set('recipe', recipeId);
+      url.searchParams.delete('tab');
+    } else if (screen !== 'home') {
+      url.searchParams.set('tab', screen);
+      url.searchParams.delete('recipe');
+    } else {
+      url.searchParams.delete('recipe');
+      url.searchParams.delete('tab');
+    }
+    // Don't add a history entry on every render — replace current
+    window.history.replaceState({}, '', url.toString());
+  }, [screen, recipeId]);
 
   const isAdmin = session?.user?.role === 'ADMIN';
   const tabs = isAdmin

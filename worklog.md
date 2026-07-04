@@ -820,3 +820,30 @@ Stage Summary:
 - 8 unused dependencies removed
 - SEO: sitemap + robots.txt serving correctly
 - App is production-hardened for the achievable items in this environment
+
+---
+Task ID: PHASE-5
+Agent: main
+Task: Phase 5 — growth features (PWA, SEO, deep linking) + fix loading issue
+
+Work Log:
+0. FIX: App not loading — caused by robots.txt conflict (public/robots.txt vs app/robots.ts). Already fixed in Phase 4 but server needed restart. Killed all dev processes, restarted cleanly.
+1. PWA: Generated app icon (512x512), created public/manifest.json (name, short_name, icons, theme color, standalone display), linked in layout.tsx with appleWebApp config and apple-touch-icon.
+2. JSON-LD: Added WebSite structured data script in layout.tsx head — helps Google understand the site + SearchAction for sitelinks search box.
+3. OPEN GRAPH: Added og:title, og:description, og:type, og:siteName, og:image (hero-spread.png) + Twitter card metadata in layout.tsx.
+4. DEEP LINKING: Added getInitialScreen() that reads ?recipe=ID and ?tab=X from URL on mount (lazy useState initializer, no effect needed). URL updates on navigation via useEffect (replaceState). Shareable links: /?recipe=r001 opens recipe detail, /?tab=planner opens planner.
+
+Verification:
+- App loads: ✓ (no errors)
+- Deep link ?recipe=r001: opens Chicken Katsu Curry detail ✓
+- Deep link ?tab=planner: opens Meal Planner ✓
+- Manifest: serves correctly at /manifest.json ✓
+- JSON-LD: present in HTML head ✓
+- OG tags: og:title, og:image present ✓
+- Lint: 0 errors | Build: passes ✓
+
+Stage Summary:
+- App is now a PWA (installable on phones/desktops)
+- SEO: sitemap, robots.txt, JSON-LD, Open Graph all present
+- Deep linking: shareable URLs for recipes and tabs
+- App loading issue fixed
