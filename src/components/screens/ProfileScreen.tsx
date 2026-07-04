@@ -17,6 +17,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { LegalSection } from '@/components/legal/LegalSection';
+import { SettingsSection } from '@/components/settings/SettingsSection';
 import { useState } from 'react';
 import type { Screen } from '@/types';
 
@@ -210,6 +211,9 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
         <LinkRow icon={<Star className="h-4 w-4" />} label="Free recipes" value={`${stats.freeCount} available`} onClick={() => onNavigate('browse')} />
         <LinkRow icon={<Heart className="h-4 w-4" />} label="Your favorites" value={`${favorites.length} saved`} onClick={() => onNavigate('browse')} />
       </div>
+
+      {/* Settings (only when logged in) */}
+      {isLoggedIn && <SettingsSection />}
 
       {/* Legal */}
       <LegalSection />
