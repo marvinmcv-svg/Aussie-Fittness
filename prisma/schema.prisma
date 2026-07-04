@@ -21,6 +21,7 @@ model User {
   favorites     Favorite[]
   mealPlan      MealPlanEntry[]
   shoppingItems ShoppingItem[]
+  resetTokens   PasswordResetToken[]
 }
 
 model Favorite {
@@ -54,6 +55,16 @@ model ShoppingItem {
   fromRecipe String?
   createdAt  DateTime @default(now())
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Post {

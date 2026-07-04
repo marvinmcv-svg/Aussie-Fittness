@@ -789,3 +789,34 @@ Stage Summary:
 - Guest mode (logged out) still uses localStorage for immediate UX
 - On first login, local guest data is automatically migrated to the DB
 - All mutations are optimistic (instant UI) + server-synced (durable)
+
+---
+Task ID: PHASE-4
+Agent: main
+Task: Phase 4 — production hardening
+
+Work Log:
+1. IMAGE OPTIMIZATION: Migrated ImageWithFallback from raw <img> to next/image with fill mode, responsive sizes attribute, and lazy loading. Next.js automatically serves WebP/AVIF at the right resolution. 25MB of PNGs now optimized per-device.
+2. PASSWORD RESET FLOW: Complete flow with 2 API routes + UI:
+   - POST /api/auth/forgot-password: generates secure token (randomBytes 32 hex), stores in DB with 1hr expiry, invalidates old tokens, logs reset URL to server console in dev mode (ready for Resend/SendGrid in prod). Always returns 200 to prevent email enumeration. Rate limited (3/15min).
+   - POST /api/auth/reset-password: validates token (not used, not expired), hashes new password, updates user, marks token used. Rate limited (5/15min).
+   - Added PasswordResetToken model to Prisma (token unique, expiresAt, used flag, cascade delete).
+   - AuthModal updated with 4 views: login, signup, forgot, reset. "Forgot password?" link on login view. Reset view auto-detects ?reset=TOKEN in URL.
+3. UNUSED DEPENDENCIES REMOVED: @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities, @mdxeditor/editor, react-syntax-highlighter, @tanstack/react-table, next-intl, react-markdown. 8 packages removed.
+4. SEO: Added sitemap.ts (135 recipe URLs + home, static) and robots.ts (allow all, disallow /api/, link to sitemap). Removed conflicting public/robots.txt.
+5. SKIPPED (documented): PostgreSQL migration (SQLite only in sandbox), Sentry/analytics (need API keys), email verification (needs email service), @t3-oss/env-nextjs (already have env.ts).
+
+Verification:
+- Lint: 0 errors | Build: passes (all routes + /robots.txt + /sitemap.xml)
+- Image optimization: next/image renders, no console errors
+- Password reset: forgot password → email logged to server console → reset link works
+- robots.txt: serves correct content
+- sitemap.xml: serves 136 URLs (home + 135 recipes)
+- App smoke test: renders, no errors
+
+Stage Summary:
+- Images now optimized (WebP/AVIF, responsive)
+- Password reset flow complete (ready for email service integration)
+- 8 unused dependencies removed
+- SEO: sitemap + robots.txt serving correctly
+- App is production-hardened for the achievable items in this environment
