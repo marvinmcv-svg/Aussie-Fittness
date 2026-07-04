@@ -25,7 +25,7 @@ interface ProfileScreenProps {
 
 export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
   const { data: session, status } = useSession();
-  const { isPremium, unlockPremium } = usePremium();
+  const { isPremium } = usePremium();
   const favorites = useFavorites((s) => s.favorites);
   const mealCount = useMealPlan((s) => s.meals.length);
   const shoppingCount = useShoppingList((s) => s.items.length);
@@ -235,8 +235,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
       {showPaywall && (
         <PaywallModal
           onClose={() => setShowPaywall(false)}
-          onUnlock={() => {
-            unlockPremium();
+          onSuccess={() => {
             setShowPaywall(false);
             toast({ title: 'Premium unlocked!', description: 'All 135 recipes are now yours.' });
           }}
@@ -308,17 +307,39 @@ function LinkRow({
   );
 }
 
-function PaywallModal({ onClose, onUnlock }: { onClose: () => void; onUnlock: () => void }) {
+function PaywallModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
   const [processing, setProcessing] = useState(false);
-  const [done, setDone] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handlePurchase = () => {
+  const handlePurchase = async () => {
     setProcessing(true);
-    setTimeout(() => {
+    setError(null);
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to start checkout');
+      }
+      // If Stripe is configured, redirect to Stripe Checkout
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+      // If Stripe is NOT configured (demo mode), payment is processed instantly
+      // The API route grants premium directly. Refresh the session.
+      if (data.demo) {
+        // Trigger session refresh by reloading
+        window.location.reload();
+        return;
+      }
+      throw new Error('Unexpected response from server');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong');
       setProcessing(false);
-      setDone(true);
-      setTimeout(onUnlock, 800);
-    }, 1200);
+    }
   };
 
   return (
@@ -354,20 +375,20 @@ function PaywallModal({ onClose, onUnlock }: { onClose: () => void; onUnlock: ()
             <div className="text-3xl font-extrabold">$9.99</div>
             <div className="text-xs text-muted-foreground">one-time payment</div>
           </div>
+          {error && (
+            <div className="mb-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
           <button
             onClick={handlePurchase}
-            disabled={processing || done}
+            disabled={processing}
             className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-amber-500/20 transition-transform hover:scale-[1.02] disabled:opacity-70"
           >
             {processing ? (
               <>
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                Processing...
-              </>
-            ) : done ? (
-              <>
-                <Check className="h-5 w-5" aria-hidden="true" />
-                Unlocked!
+                Redirecting to checkout...
               </>
             ) : (
               <>
@@ -377,7 +398,7 @@ function PaywallModal({ onClose, onUnlock }: { onClose: () => void; onUnlock: ()
             )}
           </button>
           <p className="mt-3 text-center text-[11px] text-muted-foreground">
-            This is a demo purchase — no real payment is processed.
+            Secure payment via Stripe. You&apos;ll be redirected to complete your purchase.
           </p>
         </div>
       </DialogContent>

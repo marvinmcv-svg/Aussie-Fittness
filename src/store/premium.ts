@@ -1,26 +1,27 @@
 'use client';
 
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
 
 interface PremiumState {
+  /** Whether the user has premium access. Set ONLY from the server session. */
   isPremium: boolean;
-  unlockPremium: () => void;
-  lockPremium: () => void;
-  togglePremium: () => void;
+  /** Internal setter — only called by the session sync effect in page.tsx */
+  _setPremium: (value: boolean) => void;
 }
 
-export const usePremium = create<PremiumState>()(
-  persist(
-    (set) => ({
-      isPremium: false,
-      unlockPremium: () => set({ isPremium: true }),
-      lockPremium: () => set({ isPremium: false }),
-      togglePremium: () => set((state) => ({ isPremium: !state.isPremium })),
-    }),
-    {
-      name: 'aussie_fitness_premium',
-      storage: createJSONStorage(() => localStorage),
-    }
-  )
-);
+/**
+ * Premium store — READ ONLY from the client's perspective.
+ *
+ * The `isPremium` value is synced from the NextAuth session (server-side DB
+ * check) in page.tsx. There is NO `unlockPremium()` method — premium can only
+ * be granted by:
+ *   1. A successful Stripe payment (via webhook → DB update)
+ *   2. An admin manually toggling it (via admin API → DB update)
+ *
+ * This prevents the previous bypass where users could set localStorage to
+ * get free premium.
+ */
+export const usePremium = create<PremiumState>()((set) => ({
+  isPremium: false,
+  _setPremium: (value) => set({ isPremium: value }),
+}));

@@ -719,3 +719,33 @@ Stage Summary:
 - Auth endpoints protected with rate limiting + input validation
 - Security headers on all responses
 - App ready for Phase 2 (real premium + payments)
+
+---
+Task ID: PHASE-2
+Agent: main
+Task: Phase 2 — real premium + payments (server-side enforcement)
+
+Work Log:
+1. PREMIUM STORE MADE READ-ONLY: Removed unlockPremium()/lockPremium()/togglePremium() from src/store/premium.ts. Premium is now a read-only value set ONLY by the session sync effect. No client-side bypass possible.
+2. SESSION SYNC: page.tsx now syncs premium from useSession() (server-side DB check). When logged out, premium is always false. When logged in, premium comes from the JWT which re-checks the DB every 60 seconds.
+3. JWT CALLBACK UPGRADE: auth.ts jwt() callback now re-fetches isPremium and role from the DB every 60 seconds (premiumCheckedAt timestamp). This means premium granted via Stripe webhook or admin panel is reflected without requiring re-login.
+4. STRIPE CHECKOUT ROUTE: /api/stripe/checkout — authenticates user, checks if already premium, creates Stripe Checkout session (mode: payment, one-time). If Stripe not configured (demo mode), grants premium directly in DB with a console warning.
+5. STRIPE WEBHOOK ROUTE: /api/stripe/webhook — verifies Stripe signature, handles checkout.session.completed event, grants premium in DB using client_reference_id/metadata userId.
+6. PAYWALL MODAL UPDATED: PaywallModal now calls /api/stripe/checkout. If Stripe configured → redirects to Stripe Checkout URL. If demo mode → reloads page (session refreshes within 60s). Shows error messages on failure.
+7. PAYMENT REDIRECT HANDLER: page.tsx handles ?payment=success (forces reload for session refresh) and ?payment=cancelled (shows toast, cleans URL).
+8. ENV VALIDATION: env.ts now includes optional STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_ID. STRIPE_ENABLED flag = true only when key is set and not a placeholder.
+
+Verification:
+- localStorage bypass attempt: FAILED (session still shows premium:false after setting localStorage) ✓
+- Demo mode purchase: premium granted in DB, session shows premium:true after JWT refresh ✓
+- Profile shows "PREMIUM MEMBER" + "Premium active" after purchase ✓
+- New user signup: premium:false ✓
+- Lint: 0 errors | Build: passes (all routes including /api/stripe/*) ✓
+
+Stage Summary:
+- Premium is now server-enforced — no client-side bypass possible
+- Stripe Checkout integration ready (just add real API keys to .env)
+- Webhook handler ready (just register URL in Stripe Dashboard)
+- Demo mode works without Stripe for development/testing
+- Admin can still manually grant premium via admin panel
+- JWT auto-refreshes premium status every 60 seconds

@@ -11,6 +11,7 @@ import { ShoppingScreen } from '@/components/screens/ShoppingScreen';
 import { ProfileScreen } from '@/components/screens/ProfileScreen';
 import { AdminScreen } from '@/components/screens/AdminScreen';
 import { usePremium } from '@/store/premium';
+import { useToast } from '@/hooks/use-toast';
 import type { Screen } from '@/types';
 
 interface Tab {
@@ -34,15 +35,32 @@ export default function Home_() {
   const [browseCategory, setBrowseCategory] = useState<'all' | 'Savoury' | 'Sweet' | 'favorites'>('all');
   const [history, setHistory] = useState<Screen>('home');
 
-  // Sync premium store with the user's DB record when session changes
-  const { isPremium: localPremium, unlockPremium, lockPremium } = usePremium();
+  // Sync premium store from the server session (DB is the source of truth).
+  // When logged out, premium is always false. There is no client-side bypass.
+  const _setPremium = usePremium((s) => s._setPremium);
   useEffect(() => {
     if (status === 'authenticated' && session?.user) {
-      const dbPremium = session.user.isPremium;
-      if (dbPremium && !localPremium) unlockPremium();
-      if (!dbPremium && localPremium) lockPremium();
+      _setPremium(session.user.isPremium);
+    } else if (status === 'unauthenticated') {
+      _setPremium(false);
     }
-  }, [session, status, localPremium, unlockPremium, lockPremium]);
+  }, [session, status, _setPremium]);
+
+  // Handle Stripe redirect back (success/cancel query param)
+  const { toast } = useToast();
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const payment = params.get('payment');
+    if (payment === 'success') {
+      // Force session refresh so the new premium status is picked up
+      window.location.href = window.location.pathname;
+    } else if (payment === 'cancelled') {
+      toast({ title: 'Payment cancelled', description: 'Your premium unlock was not completed.' });
+      // Clean the URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [toast]);
 
   const isAdmin = session?.user?.role === 'ADMIN';
   const tabs = isAdmin

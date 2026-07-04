@@ -55,9 +55,28 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        // Initial sign-in: store user data in token
         token.id = user.id;
         token.role = (user as { role?: string }).role ?? 'USER';
         token.isPremium = (user as { isPremium?: boolean }).isPremium ?? false;
+        token.premiumCheckedAt = Date.now();
+      } else if (token.id) {
+        // Subsequent requests: re-check premium status from DB every 60 seconds.
+        // This ensures premium granted via Stripe webhook or admin is reflected
+        // without requiring the user to sign out and back in.
+        const now = Date.now();
+        const lastChecked = (token.premiumCheckedAt as number) ?? 0;
+        if (now - lastChecked > 60_000) {
+          const dbUser = await db.user.findUnique({
+            where: { id: token.id as string },
+            select: { isPremium: true, role: true },
+          });
+          if (dbUser) {
+            token.isPremium = dbUser.isPremium;
+            token.role = dbUser.role;
+          }
+          token.premiumCheckedAt = now;
+        }
       }
       return token;
     },
@@ -95,5 +114,6 @@ declare module 'next-auth/jwt' {
     id?: string;
     role?: string;
     isPremium?: boolean;
+    premiumCheckedAt?: number;
   }
 }
