@@ -61,7 +61,7 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || 'aussie-fitness-cookbook-secret-key-2026-very-secure-fallback',
 };
 
 // Extend the type declarations
