@@ -13,7 +13,13 @@ const required = {
 
 const missing = Object.entries(required).filter(([, v]) => !v).map(([k]) => k);
 
-if (missing.length > 0) {
+// `next build` imports route modules to collect page data. Don't require
+// runtime secrets at that point: the build has no use for them, and requiring
+// them would block deploying the static parts of the site. They are still
+// enforced the moment any server code runs.
+const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build';
+
+if (missing.length > 0 && !isBuildPhase) {
   throw new Error(
     `Missing required environment variables: ${missing.join(', ')}.\n` +
     `Set these in your .env file or deployment environment.\n` +
