@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import { usePremium } from '@/store/premium';
+import { usePaywall } from '@/store/paywall';
 import { useFavorites } from '@/store/favorites';
 import { useMealPlan } from '@/store/mealPlan';
 import { useShoppingList } from '@/store/shoppingList';
@@ -34,7 +35,6 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
   const { goals, setGoals, resetGoals } = useGoals();
   const { toast } = useToast();
   const stats = getRecipeStats();
-  const [showPaywall, setShowPaywall] = useState(false);
   const [showGoals, setShowGoals] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
@@ -179,14 +179,14 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
             </div>
 
             <button
-              onClick={() => setShowPaywall(true)}
+              onClick={() => usePaywall.getState().show('profile')}
               className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-amber-500/20 transition-transform hover:scale-[1.02]"
             >
               <Crown className="h-5 w-5" />
               Unlock Premium — $9.99
             </button>
             <p className="mt-2 text-center text-[11px] text-muted-foreground">
-              Demo purchase — no real charge. Tap to simulate unlock.
+              One-time payment · 14-day money-back guarantee
             </p>
           </div>
         </div>
@@ -238,17 +238,6 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
           </div>
         </div>
       </div>
-
-      {/* Paywall modal */}
-      {showPaywall && (
-        <PaywallModal
-          onClose={() => setShowPaywall(false)}
-          onSuccess={() => {
-            setShowPaywall(false);
-            toast({ title: 'Premium unlocked!', description: 'All 135 recipes are now yours.' });
-          }}
-        />
-      )}
 
       {/* Goals modal */}
       <GoalsModal
@@ -312,105 +301,6 @@ function LinkRow({
       <span className="flex-1 text-sm font-medium">{label}</span>
       <span className="text-xs text-muted-foreground">{value}</span>
     </button>
-  );
-}
-
-function PaywallModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
-  const [processing, setProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handlePurchase = async () => {
-    setProcessing(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/stripe/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to start checkout');
-      }
-      // If Stripe is configured, redirect to Stripe Checkout
-      if (data.url) {
-        window.location.href = data.url;
-        return;
-      }
-      // If Stripe is NOT configured (demo mode), payment is processed instantly
-      // The API route grants premium directly. Refresh the session.
-      if (data.demo) {
-        // Trigger session refresh by reloading
-        window.location.reload();
-        return;
-      }
-      throw new Error('Unexpected response from server');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
-      setProcessing(false);
-    }
-  };
-
-  return (
-    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="max-w-md gap-0 p-0" aria-describedby="paywall-desc">
-        <DialogDescription id="paywall-desc" className="sr-only">
-          Unlock premium to access all recipes, the meal planner, and smart shopping lists.
-        </DialogDescription>
-        <div className="relative bg-gradient-to-br from-amber-500 to-orange-500 p-6 text-center text-white">
-          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-white/20">
-            <Crown className="h-8 w-8" aria-hidden="true" />
-          </div>
-          <DialogTitle className="text-xl font-extrabold text-white">Unlock Premium</DialogTitle>
-          <p className="mt-1 text-sm text-white/90">All recipes, forever</p>
-        </div>
-        <div className="p-6">
-          <div className="mb-4 space-y-2">
-            {[
-              'All 110+ premium recipes unlocked',
-              'Meal planner with macro tracking',
-              'Smart shopping list',
-              'No ads, ever',
-            ].map((t) => (
-              <div key={t} className="flex items-center gap-2.5">
-                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-protein/20">
-                  <Check className="h-3 w-3 text-protein" aria-hidden="true" />
-                </div>
-                <span className="text-sm">{t}</span>
-              </div>
-            ))}
-          </div>
-          <div className="mb-4 rounded-xl bg-muted/50 p-3 text-center">
-            <div className="text-3xl font-extrabold">$9.99</div>
-            <div className="text-xs text-muted-foreground">one-time payment</div>
-          </div>
-          {error && (
-            <div className="mb-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-              {error}
-            </div>
-          )}
-          <button
-            onClick={handlePurchase}
-            disabled={processing}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-amber-500/20 transition-transform hover:scale-[1.02] disabled:opacity-70"
-          >
-            {processing ? (
-              <>
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                Redirecting to checkout...
-              </>
-            ) : (
-              <>
-                <Crown className="h-5 w-5" aria-hidden="true" />
-                Purchase & Unlock
-              </>
-            )}
-          </button>
-          <p className="mt-3 text-center text-[11px] text-muted-foreground">
-            Secure payment via Stripe. You&apos;ll be redirected to complete your purchase.
-          </p>
-        </div>
-      </DialogContent>
-    </Dialog>
   );
 }
 

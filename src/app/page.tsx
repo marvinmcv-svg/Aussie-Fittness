@@ -10,6 +10,7 @@ import { PlannerScreen } from '@/components/screens/PlannerScreen';
 import { ShoppingScreen } from '@/components/screens/ShoppingScreen';
 import { ProfileScreen } from '@/components/screens/ProfileScreen';
 import { AdminScreen } from '@/components/screens/AdminScreen';
+import { Paywall } from '@/components/paywall/Paywall';
 import { usePremium } from '@/store/premium';
 import { useToast } from '@/hooks/use-toast';
 import { useUserDataSync } from '@/hooks/use-user-data-sync';
@@ -190,6 +191,9 @@ export default function Home_() {
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-5">
         {renderScreen()}
       </main>
+
+      {/* Global paywall — opened from any screen via usePaywall().show() */}
+      <Paywall />
 
       {/* Bottom tab navigation */}
       <nav className="sticky bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur-md">

@@ -12,11 +12,13 @@ interface AuthModalProps {
   open: boolean;
   onClose: () => void;
   mode?: 'login' | 'signup';
+  /** Called after a successful sign-in/sign-up instead of onClose (e.g. to continue to checkout). */
+  onSuccess?: () => void;
 }
 
 type View = 'login' | 'signup' | 'forgot' | 'reset';
 
-export function AuthModal({ open, onClose, mode: initialMode = 'login' }: AuthModalProps) {
+export function AuthModal({ open, onClose, onSuccess, mode: initialMode = 'login' }: AuthModalProps) {
   const [view, setView] = useState<View>(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -63,13 +65,13 @@ export function AuthModal({ open, onClose, mode: initialMode = 'login' }: AuthMo
         if (result?.error) throw new Error(result.error);
 
         toast({ title: 'Welcome aboard!', description: 'Your account has been created.' });
-        resetAndClose();
+        resetAndClose(true);
       } else if (view === 'login') {
         const result = await signIn('credentials', { email, password, redirect: false });
         if (result?.error) throw new Error(result.error);
 
         toast({ title: 'Welcome back!', description: 'You are now signed in.' });
-        resetAndClose();
+        resetAndClose(true);
       } else if (view === 'forgot') {
         const res = await fetch('/api/auth/forgot-password', {
           method: 'POST',
@@ -110,14 +112,15 @@ export function AuthModal({ open, onClose, mode: initialMode = 'login' }: AuthMo
     }
   };
 
-  const resetAndClose = () => {
+  const resetAndClose = (succeeded = false) => {
     setEmail('');
     setPassword('');
     setName('');
     setNewPassword('');
     setResetToken('');
     setForgotSent(false);
-    onClose();
+    if (succeeded && onSuccess) onSuccess();
+    else onClose();
   };
 
   const titles: Record<View, string> = {

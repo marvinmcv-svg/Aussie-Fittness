@@ -6,6 +6,7 @@ import {
   Wheat, Droplet, ShoppingBasket, CalendarDays
 } from 'lucide-react';
 import { getRecipeById, getRecipeVisual, getAllRecipes } from '@/lib/recipes';
+import { fetchFullRecipes } from '@/hooks/use-full-recipe';
 import { ImageWithFallback } from '@/components/recipe/ImageWithFallback';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -87,7 +88,7 @@ export function PlannerScreen({ onNavigate }: PlannerScreenProps) {
     };
   }, [meals]);
 
-  const importToShopping = () => {
+  const importToShopping = async () => {
     const recipeMap = new Map<string, { servings: number; recipe: NonNullable<ReturnType<typeof getRecipeById>> }>();
     for (const m of meals) {
       const r = getRecipeById(m.recipeId);
@@ -99,6 +100,21 @@ export function PlannerScreen({ onNavigate }: PlannerScreenProps) {
         recipeMap.set(m.recipeId, { servings: m.servings, recipe: r });
       }
     }
+    // Premium recipes only carry a teaser client-side — fetch full ingredients.
+    // The API only returns them for premium users; locked recipes are skipped.
+    const premiumIds = [...recipeMap.values()].filter((v) => v.recipe.premium).map((v) => v.recipe.id);
+    const full = premiumIds.length ? await fetchFullRecipes(premiumIds) : new Map();
+    let skippedLocked = 0;
+    for (const id of premiumIds) {
+      const entry = recipeMap.get(id)!;
+      const f = full.get(id);
+      if (f) entry.recipe = f;
+      else {
+        recipeMap.delete(id);
+        skippedLocked++;
+      }
+    }
+
     const items: { name: string; quantity?: string; fromRecipe: string }[] = [];
     for (const { servings, recipe } of recipeMap.values()) {
       const mult = servings / recipe.servings;
@@ -117,7 +133,9 @@ export function PlannerScreen({ onNavigate }: PlannerScreenProps) {
     const added = addItems(items);
     toast({
       title: `Imported ${added} items`,
-      description: `${items.length} ingredients from your meal plan added to shopping list.`,
+      description:
+        `${items.length} ingredients from your meal plan added to shopping list.` +
+        (skippedLocked ? ` ${skippedLocked} premium recipe${skippedLocked > 1 ? 's' : ''} skipped — unlock to include them.` : ''),
     });
     onNavigate('shopping');
   };

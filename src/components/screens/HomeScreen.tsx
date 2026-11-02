@@ -4,6 +4,7 @@ import { Flame, TrendingUp, Sparkles, Crown, ChevronRight, Clock, Egg } from 'lu
 import { RecipeCard } from '@/components/recipe/RecipeCard';
 import { getRecipeStats, getFeaturedRecipes, getFreeRecipes } from '@/lib/recipes';
 import { usePremium } from '@/store/premium';
+import { usePaywall } from '@/store/paywall';
 import type { Screen } from '@/types';
 
 interface HomeScreenProps {
@@ -160,7 +161,7 @@ export function HomeScreen({ onNavigate, onBrowseCategory }: HomeScreenProps) {
               </p>
             </div>
             <button
-              onClick={() => onNavigate('profile')}
+              onClick={() => usePaywall.getState().show('home')}
               className="inline-flex shrink-0 items-center gap-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-amber-500/20 transition-transform hover:scale-105"
             >
               <Crown className="h-4 w-4" />

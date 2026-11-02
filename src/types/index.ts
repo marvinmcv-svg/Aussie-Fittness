@@ -20,6 +20,10 @@ export interface Recipe {
   sourcePage: number | null;
   premium: boolean;
   isTotal?: boolean; // true if macros shown are for the whole recipe (not per serving)
+  /** Full ingredient count (public data only holds a teaser for premium recipes) */
+  ingredientCount?: number;
+  /** Full step count (public data holds no directions for premium recipes) */
+  stepCount?: number;
 }
 
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';

@@ -9,7 +9,8 @@ import { getRecipeById, getRecipeVisual } from '@/lib/recipes';
 import { MacroRing, MacroBar } from '@/components/recipe/MacroBar';
 import { ImageWithFallback } from '@/components/recipe/ImageWithFallback';
 import { useFavorites } from '@/store/favorites';
-import { usePremium } from '@/store/premium';
+import { usePaywall } from '@/store/paywall';
+import { useFullRecipe } from '@/hooks/use-full-recipe';
 import { useMealPlan } from '@/store/mealPlan';
 import { useShoppingList } from '@/store/shoppingList';
 import { useToast } from '@/hooks/use-toast';
@@ -32,7 +33,9 @@ interface RecipeDetailScreenProps {
 }
 
 export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetailScreenProps) {
-  const recipe = useMemo(() => getRecipeById(recipeId), [recipeId]);
+  const publicRecipe = useMemo(() => getRecipeById(recipeId), [recipeId]);
+  // Premium content is fetched from the server only for premium users.
+  const { recipe, locked, loading } = useFullRecipe(publicRecipe);
   const [servings, setServings] = useState(recipe?.servings ?? 1);
   const [checkedSteps, setCheckedSteps] = useState<Set<number>>(new Set());
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set());
@@ -41,7 +44,6 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
 
   const fav = useFavorites((s) => s.favorites.includes(recipeId));
   const toggleFavorite = useFavorites((s) => s.toggleFavorite);
-  const isPremium = usePremium((s) => s.isPremium);
   const addMeal = useMealPlan((s) => s.addMeal);
   const addItems = useShoppingList((s) => s.addItems);
   const { toast } = useToast();
@@ -58,7 +60,9 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
   }
 
   const visual = getRecipeVisual(recipe);
-  const locked = recipe.premium && !isPremium;
+  const openPaywall = () => usePaywall.getState().show(`recipe:${recipe.id}`);
+  const totalIngredients = recipe.ingredientCount ?? recipe.ingredients.length;
+  const totalSteps = recipe.stepCount ?? recipe.directions.length;
   const servingsMultiplier = servings / recipe.servings;
 
   const toggleStep = (i: number) => {
@@ -89,6 +93,10 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
   };
 
   const addIngredientsToShopping = () => {
+    if (locked) {
+      openPaywall();
+      return;
+    }
     const items = recipe.ingredients.map((ing) => ({
       name: ing,
       quantity: servingsMultiplier !== 1 ? `×${servingsMultiplier.toFixed(1)} servings` : undefined,
@@ -254,11 +262,11 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
         </button>
         <button
           onClick={addIngredientsToShopping}
-          disabled={addedToShopping}
+          disabled={addedToShopping || loading}
           className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm font-semibold transition-colors hover:border-primary disabled:opacity-60"
         >
           {addedToShopping ? <Check className="h-4 w-4 text-protein" /> : <ShoppingCart className="h-4 w-4" />}
-          {addedToShopping ? 'Added!' : 'Add to shopping'}
+          {addedToShopping ? 'Added!' : locked ? 'Unlock to shop' : 'Add to shopping'}
         </button>
       </div>
 
@@ -302,7 +310,7 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
           <ChefHat className="h-5 w-5 text-primary" />
           <h2 className="font-semibold">Ingredients</h2>
           <span className="ml-auto text-xs text-muted-foreground">
-            {checkedIngredients.size}/{recipe.ingredients.length}
+            {locked ? `${totalIngredients} items` : `${checkedIngredients.size}/${totalIngredients}`}
           </span>
         </div>
         <ul className="space-y-2">
@@ -326,6 +334,20 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
             </li>
           ))}
         </ul>
+        {locked && totalIngredients > recipe.ingredients.length && (
+          <div className="relative mt-1" aria-hidden="true">
+            <ul className="space-y-2 select-none blur-[5px]">
+              {Array.from({ length: Math.min(4, totalIngredients - recipe.ingredients.length) }).map((_, i) => (
+                <li key={i} className="flex items-center gap-3 p-2">
+                  <span className="h-5 w-5 rounded border border-border" />
+                  <span className="h-3 rounded bg-muted-foreground/40" style={{ width: `${55 + ((i * 17) % 35)}%` }} />
+                </li>
+              ))}
+            </ul>
+            <div className="absolute inset-0 bg-gradient-to-b from-card/0 to-card" />
+          </div>
+        )}
+        {loading && <p className="mt-2 text-xs text-muted-foreground">Loading full recipe…</p>}
       </div>
 
       {/* Directions */}
@@ -334,9 +356,19 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
           <ListChecks className="h-5 w-5 text-primary" />
           <h2 className="font-semibold">Directions</h2>
           <span className="ml-auto text-xs text-muted-foreground">
-            {checkedSteps.size}/{recipe.directions.length} done
+            {locked ? `${totalSteps} steps` : `${checkedSteps.size}/${totalSteps} done`}
           </span>
         </div>
+        {locked && (
+          <button
+            onClick={openPaywall}
+            className="flex w-full flex-col items-center gap-2 rounded-xl border border-dashed border-border bg-muted/30 px-4 py-6 text-center transition-colors hover:border-primary/50"
+          >
+            <Lock className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+            <span className="text-sm font-semibold">{totalSteps} step-by-step directions</span>
+            <span className="text-xs text-muted-foreground">Included with lifetime access</span>
+          </button>
+        )}
         <ol className="space-y-3">
           {recipe.directions.map((step, i) => (
             <li key={i}>
@@ -370,11 +402,11 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
             <div className="flex-1">
               <h3 className="font-bold">Premium Recipe</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                You can view the macros, but unlock premium to access the full
-                recipe and 110+ others.
+                Unlock the full ingredients and directions for this recipe and
+                every other premium recipe — one payment, yours forever.
               </p>
               <button
-                onClick={() => onNavigate('profile')}
+                onClick={openPaywall}
                 className="mt-3 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-2 text-sm font-bold text-white"
               >
                 <Crown className="h-4 w-4" />

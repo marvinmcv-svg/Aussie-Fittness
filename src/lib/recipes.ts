@@ -1,4 +1,7 @@
-import recipesData from '@/../data/recipes.json';
+// IMPORTANT: client-safe data only. Premium recipes here have NO directions and
+// only a 3-ingredient teaser. Full content lives in data/recipes.json and is
+// served exclusively by src/lib/recipes.server.ts → /api/recipes/[id].
+import recipesData from '@/../data/recipes.public.json';
 import type { Recipe, SortOption, RecipeFilters } from '@/types';
 
 const recipes: Recipe[] = recipesData.recipes as Recipe[];
