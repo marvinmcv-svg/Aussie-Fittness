@@ -173,7 +173,7 @@ export function PlannerScreen({ onNavigate }: PlannerScreenProps) {
       </div>
 
       {/* Day totals */}
-      <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="surface rounded-[20px] p-5">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-semibold">{DAYS[activeDay]} totals</h2>
           {dayMeals.length > 0 && (
@@ -217,7 +217,7 @@ export function PlannerScreen({ onNavigate }: PlannerScreenProps) {
         {MEAL_TYPES.map((mt) => {
           const mealsOfType = dayMeals.filter((m) => m.mealType === mt.value);
           return (
-            <div key={mt.value} className="rounded-2xl border border-border bg-card p-4">
+            <div key={mt.value} className="surface rounded-[20px] p-4">
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="font-semibold">
                   <span className="mr-1.5">{mt.emoji}</span>
@@ -499,7 +499,7 @@ function RecipePicker({
                       </div>
                     </div>
                     {r.premium && (
-                      <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-bold text-amber-400">
+                      <span className="rounded-full bg-foreground px-1.5 py-0.5 text-[9px] font-semibold text-background">
                         PRO
                       </span>
                     )}

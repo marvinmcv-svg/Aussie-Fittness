@@ -5,8 +5,13 @@
 
 @theme inline {
   --color-background: var(--background);
+  --color-brand: var(--brand);
+  --color-protein: var(--macro-protein);
+  --color-carbs: var(--macro-carbs);
+  --color-fats: var(--macro-fats);
+  --color-calories: var(--macro-calories);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--font-inter), system-ui, sans-serif;
   --font-mono: var(--font-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -43,87 +48,111 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* Dark fitness theme — applied by default via .dark on <html> */
+/* ─────────────────────────────────────────────────────────────
+   AussieFit design tokens — Apple HIG-inspired.
+   Light is the default; .dark (system preference via next-themes)
+   switches to the iOS dark palette. Primary is monochrome (black
+   pill CTAs, as in Cal AI / CREME / Julienne); the brand green and
+   the macro colours are reserved for data and progress.
+   ───────────────────────────────────────────────────────────── */
 :root {
-  --radius: 0.75rem;
-  /* Dark theme (default) */
-  --background: oklch(0.16 0.008 150);
-  --foreground: oklch(0.97 0.005 150);
-  --card: oklch(0.21 0.01 150);
-  --card-foreground: oklch(0.97 0.005 150);
-  --popover: oklch(0.21 0.01 150);
-  --popover-foreground: oklch(0.97 0.005 150);
-  --primary: oklch(0.72 0.17 150);
-  --primary-foreground: oklch(0.16 0.008 150);
-  --secondary: oklch(0.26 0.012 150);
-  --secondary-foreground: oklch(0.97 0.005 150);
-  --muted: oklch(0.25 0.01 150);
-  --muted-foreground: oklch(0.68 0.015 150);
-  --accent: oklch(0.30 0.02 150);
-  --accent-foreground: oklch(0.97 0.005 150);
-  --destructive: oklch(0.65 0.22 25);
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.72 0.17 150);
-  /* Macro colors */
-  --chart-1: oklch(0.72 0.17 150); /* protein - green */
-  --chart-2: oklch(0.75 0.16 85);  /* carbs - amber */
-  --chart-3: oklch(0.65 0.22 25);  /* fats - rose */
-  --chart-4: oklch(0.70 0.15 200); /* calories - cyan */
-  --chart-5: oklch(0.72 0.17 150);
-  --sidebar: oklch(0.19 0.008 150);
-  --sidebar-foreground: oklch(0.97 0.005 150);
-  --sidebar-primary: oklch(0.72 0.17 150);
-  --sidebar-primary-foreground: oklch(0.16 0.008 150);
-  --sidebar-accent: oklch(0.26 0.012 150);
-  --sidebar-accent-foreground: oklch(0.97 0.005 150);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.72 0.17 150);
+  --radius: 1.25rem; /* 20px cards */
+
+  --background: #f2f2f7;          /* systemGroupedBackground */
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-foreground: #000000;
+  --popover: #ffffff;
+  --popover-foreground: #000000;
+  --primary: #000000;             /* CTA pills */
+  --primary-foreground: #ffffff;
+  --secondary: #e9e9ee;
+  --secondary-foreground: #000000;
+  --muted: #eeeef3;
+  --muted-foreground: #6e6e73;    /* secondaryLabel */
+  --accent: #e5e5ea;
+  --accent-foreground: #000000;
+  --destructive: #ff3b30;
+  --border: rgb(60 60 67 / 0.14); /* hairline separator */
+  --input: rgb(60 60 67 / 0.18);
+  --ring: #0a84ff;
+
+  --brand: #1fa855;               /* AussieFit green (AA on white for large text) */
+  --macro-calories: #ff9500;
+  --macro-protein: #28b553;
+  --macro-carbs: #007aff;
+  --macro-fats: #ff2d55;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px rgb(0 0 0 / 0.06);
+  --glass: rgb(249 249 251 / 0.9);
+
+  --chart-1: var(--macro-protein);
+  --chart-2: var(--macro-carbs);
+  --chart-3: var(--macro-fats);
+  --chart-4: var(--macro-calories);
+  --chart-5: var(--brand);
+  --sidebar: #f2f2f7;
+  --sidebar-foreground: #000000;
+  --sidebar-primary: #000000;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e5e5ea;
+  --sidebar-accent-foreground: #000000;
+  --sidebar-border: rgb(60 60 67 / 0.14);
+  --sidebar-ring: #0a84ff;
 }
 
-/* Light theme (if user switches) */
-:root:not(.dark) {
-  --background: oklch(0.99 0.003 150);
-  --foreground: oklch(0.20 0.01 150);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.20 0.01 150);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.20 0.01 150);
-  --primary: oklch(0.55 0.15 150);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.96 0.005 150);
-  --secondary-foreground: oklch(0.20 0.01 150);
-  --muted: oklch(0.96 0.005 150);
-  --muted-foreground: oklch(0.50 0.01 150);
-  --accent: oklch(0.94 0.01 150);
-  --accent-foreground: oklch(0.20 0.01 150);
-  --destructive: oklch(0.55 0.22 25);
-  --border: oklch(0.90 0.005 150);
-  --input: oklch(0.90 0.005 150);
-  --ring: oklch(0.55 0.15 150);
-  --chart-1: oklch(0.55 0.15 150);
-  --chart-2: oklch(0.60 0.14 85);
-  --chart-3: oklch(0.55 0.22 25);
-  --chart-4: oklch(0.50 0.13 200);
-  --chart-5: oklch(0.55 0.15 150);
-  --sidebar: oklch(0.97 0.005 150);
-  --sidebar-foreground: oklch(0.20 0.01 150);
-  --sidebar-primary: oklch(0.55 0.15 150);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.94 0.01 150);
-  --sidebar-accent-foreground: oklch(0.20 0.01 150);
-  --sidebar-border: oklch(0.90 0.005 150);
-  --sidebar-ring: oklch(0.55 0.15 150);
+.dark {
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #1c1c1e;                /* secondarySystemGroupedBackground */
+  --card-foreground: #ffffff;
+  --popover: #1c1c1e;
+  --popover-foreground: #ffffff;
+  --primary: #ffffff;
+  --primary-foreground: #000000;
+  --secondary: #2c2c2e;
+  --secondary-foreground: #ffffff;
+  --muted: #2c2c2e;
+  --muted-foreground: #98989f;
+  --accent: #3a3a3c;
+  --accent-foreground: #ffffff;
+  --destructive: #ff453a;
+  --border: rgb(84 84 88 / 0.5);
+  --input: rgb(84 84 88 / 0.65);
+  --ring: #0a84ff;
+
+  --brand: #30d158;
+  --macro-calories: #ff9f0a;
+  --macro-protein: #30d158;
+  --macro-carbs: #0a84ff;
+  --macro-fats: #ff375f;
+  --shadow-card: 0 0 0 0.5px rgb(255 255 255 / 0.06);
+  --glass: rgb(22 22 24 / 0.9);
+
+  --sidebar: #1c1c1e;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ffffff;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #2c2c2e;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgb(84 84 88 / 0.5);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "cv11", "ss01";
-    font-variation-settings: "opsz" 32;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--font-inter), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.011em;
+  }
+  h1, h2, h3 {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", var(--font-inter), system-ui, sans-serif;
+    letter-spacing: -0.022em;
   }
 }
 
@@ -147,32 +176,31 @@
   background-color: var(--muted-foreground);
 }
 
-/* Macro color utility classes */
-.text-protein { color: oklch(0.72 0.17 150); }
-.text-carbs { color: oklch(0.75 0.16 85); }
-.text-fats { color: oklch(0.65 0.22 25); }
-.text-calories { color: oklch(0.70 0.15 200); }
-
-.bg-protein { background-color: oklch(0.72 0.17 150); }
-.bg-carbs { background-color: oklch(0.75 0.16 85); }
-.bg-fats { background-color: oklch(0.65 0.22 25); }
-.bg-calories { background-color: oklch(0.70 0.15 200); }
-
-.border-protein { border-color: oklch(0.72 0.17 150); }
-.border-carbs { border-color: oklch(0.75 0.16 85); }
-.border-fats { border-color: oklch(0.65 0.22 25); }
-
-/* Animated gradient text */
-.gradient-text {
-  background: linear-gradient(135deg, oklch(0.72 0.17 150), oklch(0.75 0.16 85));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+/* Grouped "inset" surface — the iOS card */
+.surface {
+  background-color: var(--card);
+  box-shadow: var(--shadow-card);
 }
 
-/* Glass effect */
+/* Translucent bars (nav, tab bar) — the only place glass is used */
 .glass {
-  background: oklch(0.21 0.01 150 / 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background-color: var(--glass);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+/* Horizontal snap carousels */
+.snap-row {
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.snap-row::-webkit-scrollbar { display: none; }
+.snap-row > * { scroll-snap-align: start; }
+
+/* iOS press feedback */
+.pressable { transition: transform 0.15s ease, opacity 0.15s ease; }
+.pressable:active { transform: scale(0.97); opacity: 0.9; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pressable, .pressable:active { transition: none; transform: none; }
 }

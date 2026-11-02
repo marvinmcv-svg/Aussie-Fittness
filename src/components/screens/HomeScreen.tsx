@@ -1,8 +1,10 @@
 'use client';
 
-import { Flame, TrendingUp, Sparkles, Crown, ChevronRight, Clock, Egg } from 'lucide-react';
+import Image from 'next/image';
+import { ChevronRight, Check, ShieldCheck, CalendarDays, ShoppingBag, UtensilsCrossed } from 'lucide-react';
 import { RecipeCard } from '@/components/recipe/RecipeCard';
 import { getRecipeStats, getFeaturedRecipes, getFreeRecipes } from '@/lib/recipes';
+import { PRICE_LABEL, PRICE_CURRENCY, REFUND_DAYS } from '@/lib/pricing';
 import { usePremium } from '@/store/premium';
 import { usePaywall } from '@/store/paywall';
 import type { Screen } from '@/types';
@@ -12,197 +14,276 @@ interface HomeScreenProps {
   onBrowseCategory?: (category?: 'all' | 'Savoury' | 'Sweet' | 'favorites') => void;
 }
 
+/**
+ * Home doubles as the landing page. Structure follows the pattern of top
+ * nutrition/recipe apps on Mobbin: photo-led hero → proof in numbers →
+ * product carousel → how it works → pricing → FAQ. No invented testimonials.
+ */
 export function HomeScreen({ onNavigate, onBrowseCategory }: HomeScreenProps) {
   const stats = getRecipeStats();
-  const featured = getFeaturedRecipes(6);
-  const free = getFreeRecipes().slice(0, 8);
+  const featured = getFeaturedRecipes(10);
+  const free = getFreeRecipes().slice(0, 6);
   const { isPremium } = usePremium();
+  const openPaywall = (source: string) => usePaywall.getState().show(source);
 
   return (
-    <div className="space-y-8 pb-6">
-      {/* Hero */}
-      <section className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/20 via-card to-card">
-        <div className="absolute inset-0">
-          <img
+    <div className="space-y-10">
+      {/* ── Hero ─────────────────────────────────────────── */}
+      <section className="relative -mx-4 -mt-4 overflow-hidden sm:mx-0 sm:mt-0 sm:rounded-[28px]">
+        <div className="relative aspect-[4/5] w-full sm:aspect-[21/9]">
+          <Image
             src="/recipes/hero-spread.png"
-            alt="Assorted healthy high-protein fitness meals"
-            className="h-full w-full object-cover opacity-30"
+            alt="High-protein meal prep containers with chicken, rice and vegetables"
+            fill
+            priority
+            sizes="(min-width: 1024px) 1024px, 100vw"
+            className="object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-br from-background/80 via-background/60 to-background/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 via-55% to-black/0" />
         </div>
-        <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-primary/20 blur-3xl" />
-        <div className="absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-amber-500/10 blur-3xl" />
-        <div className="relative p-6 sm:p-8">
-          <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-xs font-medium text-primary">
-            <Sparkles className="h-3 w-3" />
-            Aussie Fitness Cookbook
-          </div>
-          <h1 className="text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl">
-            <span className="gradient-text">{stats.total} High-Protein</span>
-            <br />Recipes, Zero Guesswork
-          </h1>
-          <p className="mt-3 max-w-md text-sm text-muted-foreground sm:text-base">
-            Low-calorie, macro-friendly meals and snacks. Plan your week, track
-            your macros, and generate shopping lists in seconds.
+        <div className="absolute inset-x-0 bottom-0 p-6 text-white sm:p-10">
+          <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-white/70">
+            {stats.total} recipes · every macro counted
           </p>
-          <div className="mt-5 flex flex-wrap gap-2">
+          <h1 className="mt-2 text-[40px] font-bold leading-[1.02] tracking-tight sm:text-6xl">
+            Eat like
+            <br />
+            you train.
+          </h1>
+          <p className="mt-3 max-w-md text-[17px] leading-snug text-white/80">
+            High-protein meals that taste like cheat meals. Plan your week,
+            then get your shopping list in one tap.
+          </p>
+          <div className="mt-6 flex flex-col gap-2.5 sm:flex-row">
             <button
-              onClick={() => onNavigate('browse')}
-              className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-transform hover:scale-105"
+              onClick={() => onBrowseCategory?.('all')}
+              className="pressable flex h-[52px] items-center justify-center rounded-full bg-white px-7 text-[17px] font-semibold text-black"
             >
-              Browse all recipes
-              <ChevronRight className="h-4 w-4" />
+              Browse recipes
             </button>
-            <button
-              onClick={() => onNavigate('planner')}
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-5 py-2.5 text-sm font-semibold backdrop-blur-sm transition-colors hover:border-primary/50"
-            >
-              <Egg className="h-4 w-4" />
-              Plan my week
-            </button>
+            {isPremium ? (
+              <button
+                onClick={() => onNavigate('planner')}
+                className="pressable flex h-[52px] items-center justify-center rounded-full bg-white/15 px-7 text-[17px] font-semibold text-white backdrop-blur-md"
+              >
+                Plan my week
+              </button>
+            ) : (
+              <button
+                onClick={() => openPaywall('home-hero')}
+                className="pressable flex h-[52px] items-center justify-center rounded-full bg-white/15 px-7 text-[17px] font-semibold text-white backdrop-blur-md"
+              >
+                Unlock all {stats.total} — {PRICE_LABEL}
+              </button>
+            )}
           </div>
         </div>
       </section>
 
-      {/* Stats strip */}
-      <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard icon={<Flame className="h-4 w-4" />} label="Avg calories" value={`${stats.avgCalories}`} sub="per meal" color="text-calories" />
-        <StatCard icon={<TrendingUp className="h-4 w-4" />} label="Avg protein" value={`${stats.avgProtein}g`} sub="per meal" color="text-protein" />
-        <StatCard icon={<Clock className="h-4 w-4" />} label="Recipes" value={`${stats.total}`} sub={`${stats.savoury} sav · ${stats.sweet} sweet`} color="text-carbs" />
-        <StatCard icon={<Crown className="h-4 w-4" />} label="Free to try" value={`${stats.freeCount}`} sub={`of ${stats.total}`} color="text-amber-400" />
+      {/* ── Proof in numbers ─────────────────────────────── */}
+      <section className="surface grid grid-cols-3 divide-x divide-border rounded-[20px] py-4 text-center">
+        <Stat value={`${stats.avgProtein}g`} label="avg protein" className="text-protein" />
+        <Stat value={`${stats.avgCalories}`} label="avg calories" className="text-calories" />
+        <Stat value={`${stats.freeCount}`} label="free to try" />
       </section>
 
-      {/* Featured */}
+      {/* ── Carousel ─────────────────────────────────────── */}
       <section>
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-bold">Featured High-Protein</h2>
-            <p className="text-xs text-muted-foreground">Top picks by protein content</p>
-          </div>
-          <button
-            onClick={() => onNavigate('browse')}
-            className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-          >
-            See all <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <SectionHeader title="Highest protein" action="See all" onAction={() => onBrowseCategory?.('all')} />
+        <div className="snap-row -mx-4 flex gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
           {featured.map((r) => (
-            <RecipeCard
-              key={r.id}
-              recipe={r}
-              compact
-              onClick={() => onNavigate('recipe', r.id)}
-            />
-          ))}
-        </div>
-      </section>
-
-      {/* Categories */}
-      <section>
-        <h2 className="mb-4 text-xl font-bold">Categories</h2>
-        <div className="grid grid-cols-2 gap-3">
-          <CategoryCard
-            emoji="🍗"
-            name="Savoury"
-            count={stats.savoury}
-            gradient="from-emerald-500/20 to-teal-500/10"
-            onClick={() => onBrowseCategory?.('Savoury')}
-          />
-          <CategoryCard
-            emoji="🍰"
-            name="Sweet"
-            count={stats.sweet}
-            gradient="from-pink-500/20 to-rose-500/10"
-            onClick={() => onBrowseCategory?.('Sweet')}
-          />
-        </div>
-      </section>
-
-      {/* Free recipes */}
-      <section>
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-bold">Free Recipes</h2>
-            <p className="text-xs text-muted-foreground">No premium unlock required</p>
-          </div>
-          <button
-            onClick={() => onNavigate('browse')}
-            className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-          >
-            See all <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {free.map((r) => (
-            <RecipeCard
-              key={r.id}
-              recipe={r}
-              onClick={() => onNavigate('recipe', r.id)}
-            />
-          ))}
-        </div>
-      </section>
-
-      {/* Premium CTA */}
-      {!isPremium && (
-        <section className="relative overflow-hidden rounded-3xl border border-amber-500/30 bg-gradient-to-br from-amber-500/15 via-card to-card p-6">
-          <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-amber-500/20 blur-2xl" />
-          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 px-3 py-1 text-xs font-semibold text-amber-400">
-                <Crown className="h-3 w-3" />
-                Premium Unlock
-              </div>
-              <h3 className="text-xl font-bold">Unlock all {stats.premiumCount} premium recipes</h3>
-              <p className="mt-1 max-w-md text-sm text-muted-foreground">
-                Get full access to every recipe, the meal planner, and smart
-                shopping lists. One-time unlock, yours forever.
-              </p>
+            <div key={r.id} className="w-[46%] shrink-0 sm:w-[220px]">
+              <RecipeCard recipe={r} compact onClick={() => onNavigate('recipe', r.id)} />
             </div>
-            <button
-              onClick={() => usePaywall.getState().show('home')}
-              className="inline-flex shrink-0 items-center gap-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-amber-500/20 transition-transform hover:scale-105"
-            >
-              <Crown className="h-4 w-4" />
-              Unlock Premium
-            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* ── How it works ─────────────────────────────────── */}
+      <section>
+        <SectionHeader title="How it works" />
+        <ol className="surface divide-y divide-border overflow-hidden rounded-[20px]">
+          <Step
+            icon={<UtensilsCrossed className="h-[18px] w-[18px]" />}
+            tint="bg-calories"
+            title="Pick meals you'll actually enjoy"
+            body="Burgers, curries, cheesecake. Every recipe is macro-counted for you."
+          />
+          <Step
+            icon={<CalendarDays className="h-[18px] w-[18px]" />}
+            tint="bg-carbs"
+            title="Drop them into your week"
+            body="See daily calories and protein add up against your goals."
+          />
+          <Step
+            icon={<ShoppingBag className="h-[18px] w-[18px]" />}
+            tint="bg-protein"
+            title="Shop in one tap"
+            body="Your whole week becomes a grouped shopping list."
+          />
+        </ol>
+      </section>
+
+      {/* ── Categories ───────────────────────────────────── */}
+      <section className="grid grid-cols-2 gap-3">
+        <CategoryTile
+          name="Savoury"
+          count={stats.savoury}
+          photo="/recipes/r001.png"
+          onClick={() => onBrowseCategory?.('Savoury')}
+        />
+        <CategoryTile
+          name="Sweet"
+          count={stats.sweet}
+          photo="/recipes/r095.png"
+          onClick={() => onBrowseCategory?.('Sweet')}
+        />
+      </section>
+
+      {/* ── Free recipes ─────────────────────────────────── */}
+      <section>
+        <SectionHeader title="Try these free" subtitle="Full recipes, no account needed" />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {free.map((r) => (
+            <RecipeCard key={r.id} recipe={r} onClick={() => onNavigate('recipe', r.id)} />
+          ))}
+        </div>
+      </section>
+
+      {/* ── Pricing ──────────────────────────────────────── */}
+      {!isPremium && (
+        <section id="pricing" className="surface rounded-[28px] p-6 sm:p-8">
+          <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            Lifetime access
+          </p>
+          <div className="mt-1 flex items-baseline gap-2">
+            <span className="text-5xl font-bold tracking-tight">{PRICE_LABEL}</span>
+            <span className="text-[15px] text-muted-foreground">{PRICE_CURRENCY} · once</span>
           </div>
+          <p className="mt-1 text-[15px] text-muted-foreground">Less than one takeaway meal. No subscription.</p>
+          <ul className="mt-5 space-y-3">
+            {[
+              `All ${stats.total} recipes, with full ingredients and steps`,
+              'Weekly planner with live macro totals',
+              'One-tap shopping list from your plan',
+              'Every new recipe we add, free',
+            ].map((t) => (
+              <li key={t} className="flex items-start gap-3 text-[15px]">
+                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-foreground">
+                  <Check className="h-3 w-3 text-background" strokeWidth={3} aria-hidden="true" />
+                </span>
+                {t}
+              </li>
+            ))}
+          </ul>
+          <button
+            onClick={() => openPaywall('home-pricing')}
+            className="pressable mt-6 flex h-[52px] w-full items-center justify-center rounded-full bg-foreground text-[17px] font-semibold text-background"
+          >
+            Unlock everything
+          </button>
+          <p className="mt-3 flex items-center justify-center gap-1.5 text-[13px] text-muted-foreground">
+            <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+            {REFUND_DAYS}-day money-back guarantee
+          </p>
         </section>
+      )}
+
+      {/* ── FAQ ──────────────────────────────────────────── */}
+      <section>
+        <SectionHeader title="Questions" />
+        <div className="surface divide-y divide-border overflow-hidden rounded-[20px]">
+          <Faq q="Is it really a one-time payment?">
+            Yes. Pay {PRICE_LABEL} {PRICE_CURRENCY} once and keep access for good, including recipes we add later.
+          </Faq>
+          <Faq q="What if it's not for me?">
+            Email us within {REFUND_DAYS} days of purchase for a full refund. No questions asked.
+          </Faq>
+          <Faq q="Are the macros per serving?">
+            Yes, unless a recipe says &ldquo;whole recipe&rdquo;. You can scale servings and the macros update.
+          </Faq>
+          <Faq q="Can I use it like an app?">
+            Yes. On iPhone, tap Share → Add to Home Screen. It opens full-screen like a native app.
+          </Faq>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function SectionHeader({
+  title, subtitle, action, onAction,
+}: { title: string; subtitle?: string; action?: string; onAction?: () => void }) {
+  return (
+    <div className="mb-3 flex items-end justify-between">
+      <div>
+        <h2 className="text-[22px] font-bold tracking-tight">{title}</h2>
+        {subtitle && <p className="text-[13px] text-muted-foreground">{subtitle}</p>}
+      </div>
+      {action && (
+        <button
+          onClick={onAction}
+          className="inline-flex items-center text-[15px] font-medium text-muted-foreground hover:text-foreground"
+        >
+          {action}
+          <ChevronRight className="h-4 w-4" aria-hidden="true" />
+        </button>
       )}
     </div>
   );
 }
 
-function StatCard({
-  icon, label, value, sub, color,
-}: { icon: React.ReactNode; label: string; value: string; sub: string; color: string }) {
+function Stat({ value, label, className = '' }: { value: string; label: string; className?: string }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-4">
-      <div className={`mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-muted ${color}`}>
-        {icon}
-      </div>
-      <div className="text-2xl font-bold">{value}</div>
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="text-[10px] text-muted-foreground/70">{sub}</div>
+    <div className="px-2">
+      <div className={`text-[26px] font-bold tracking-tight ${className}`}>{value}</div>
+      <div className="text-[12px] text-muted-foreground">{label}</div>
     </div>
   );
 }
 
-function CategoryCard({
-  emoji, name, count, gradient, onClick,
-}: { emoji: string; name: string; count: number; gradient: string; onClick: () => void }) {
+function Step({
+  icon, tint, title, body,
+}: { icon: React.ReactNode; tint: string; title: string; body: string }) {
+  return (
+    <li className="flex items-start gap-3.5 px-4 py-3.5">
+      <span className={`flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[8px] text-white ${tint}`}>
+        {icon}
+      </span>
+      <div>
+        <div className="text-[16px] font-semibold leading-tight">{title}</div>
+        <div className="mt-0.5 text-[14px] leading-snug text-muted-foreground">{body}</div>
+      </div>
+    </li>
+  );
+}
+
+function CategoryTile({
+  name, count, photo, onClick,
+}: { name: string; count: number; photo: string; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className={`group relative flex items-center gap-4 overflow-hidden rounded-2xl border border-border bg-gradient-to-br ${gradient} p-5 text-left transition-all hover:border-primary/40 hover:shadow-lg`}
+      className="pressable relative aspect-[4/3] overflow-hidden rounded-[20px] text-left"
     >
-      <span className="text-4xl transition-transform group-hover:scale-110">{emoji}</span>
-      <div>
-        <div className="text-lg font-bold">{name}</div>
-        <div className="text-xs text-muted-foreground">{count} recipes</div>
+      <Image src={photo} alt="" fill sizes="(min-width: 640px) 50vw, 50vw" className="object-cover" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+      <div className="absolute bottom-3 left-4 text-white">
+        <div className="text-[20px] font-bold leading-tight">{name}</div>
+        <div className="text-[13px] text-white/75">{count} recipes</div>
       </div>
-      <ChevronRight className="ml-auto h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
     </button>
+  );
+}
+
+function Faq({ q, children }: { q: string; children: React.ReactNode }) {
+  return (
+    <details className="group px-4 py-3.5 [&_summary::-webkit-details-marker]:hidden">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[16px] font-medium">
+        {q}
+        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-90" aria-hidden="true" />
+      </summary>
+      <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">{children}</p>
+    </details>
   );
 }

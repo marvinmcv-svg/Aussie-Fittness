@@ -46,7 +46,7 @@ export function SettingsSection() {
 
       <button
         onClick={() => setShowChangePassword(true)}
-        className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:border-primary/40"
+        className="flex w-full items-center gap-3 surface rounded-[20px] p-4 text-left transition-colors hover:border-primary/40"
       >
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
           <KeyRound className="h-4 w-4" />
@@ -59,7 +59,7 @@ export function SettingsSection() {
 
       <button
         onClick={handleExportData}
-        className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:border-primary/40"
+        className="flex w-full items-center gap-3 surface rounded-[20px] p-4 text-left transition-colors hover:border-primary/40"
       >
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
           <Download className="h-4 w-4" />

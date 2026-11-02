@@ -120,18 +120,9 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
   };
 
   return (
-    <div className="space-y-5 pb-6">
-      {/* Back button */}
-      <button
-        onClick={onBack}
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back
-      </button>
-
-      {/* Hero image */}
-      <div className={`relative aspect-[16/10] overflow-hidden rounded-3xl bg-gradient-to-br ${visual.gradient}`}>
+    <div className="space-y-5">
+      {/* Hero — full-bleed photo with floating glass controls */}
+      <div className={`relative -mx-4 -mt-4 aspect-[4/3] overflow-hidden bg-gradient-to-br sm:mx-0 sm:mt-0 sm:aspect-[16/9] sm:rounded-[28px] ${visual.gradient}`}>
         <ImageWithFallback
           src={visual.photo}
           alt={recipe.title}
@@ -139,41 +130,44 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
           fallbackClassName="absolute inset-0 flex items-center justify-center"
           fallback={<span className="text-8xl drop-shadow-2xl">{visual.emoji}</span>}
         />
-        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent" />
-        <div className="absolute left-4 top-4 flex gap-2">
+        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/35 to-transparent" />
+        <div className="absolute inset-x-0 top-0 flex items-center justify-between p-4">
           <button
-            onClick={handleFavorite}
-            aria-label={fav ? `Remove ${recipe.title} from favorites` : `Add ${recipe.title} to favorites`}
-            aria-pressed={fav}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm transition-colors hover:bg-black/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            onClick={onBack}
+            aria-label="Back"
+            className="pressable flex h-10 w-10 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
-            <Heart className={`h-5 w-5 ${fav ? 'fill-red-500 text-red-500' : 'text-white'}`} aria-hidden="true" />
+            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           </button>
-        </div>
-        {locked && (
-          <div className="absolute right-4 top-4 flex items-center gap-1.5 rounded-full bg-amber-500/90 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-sm">
-            <Lock className="h-3 w-3" />
-            PREMIUM
+          <div className="flex items-center gap-2">
+            {locked && (
+              <span className="inline-flex h-10 items-center gap-1.5 rounded-full bg-black/35 px-3.5 text-[13px] font-semibold text-white backdrop-blur-md">
+                <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+                Premium
+              </span>
+            )}
+            <button
+              onClick={handleFavorite}
+              aria-label={fav ? `Remove ${recipe.title} from favorites` : `Add ${recipe.title} to favorites`}
+              aria-pressed={fav}
+              className="pressable flex h-10 w-10 items-center justify-center rounded-full bg-black/35 backdrop-blur-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              <Heart className={`h-5 w-5 ${fav ? 'fill-[#ff375f] text-[#ff375f]' : 'text-white'}`} aria-hidden="true" />
+            </button>
           </div>
-        )}
-        <div className="absolute bottom-4 left-4 flex items-center gap-3 text-white">
-          <span className="flex items-center gap-1.5 text-sm font-medium">
-            <Clock className="h-4 w-4" />
-            {recipe.cookTime} min
-          </span>
-          <span className="flex items-center gap-1.5 text-sm font-medium">
-            <Users className="h-4 w-4" />
-            {recipe.servings} {recipe.servingsUnit}
-          </span>
         </div>
       </div>
 
       {/* Title + tags */}
       <div>
-        <h1 className="text-2xl font-extrabold leading-tight sm:text-3xl">{recipe.title}</h1>
-        <div className="mt-2 flex flex-wrap gap-1.5">
+        <h1 className="text-[28px] font-bold leading-tight tracking-tight sm:text-4xl">{recipe.title}</h1>
+        <p className="mt-1 flex items-center gap-3 text-[15px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1"><Clock className="h-4 w-4" aria-hidden="true" />{recipe.cookTime} min</span>
+          <span className="inline-flex items-center gap-1"><Users className="h-4 w-4" aria-hidden="true" />{recipe.servings} {recipe.servingsUnit}</span>
+        </p>
+        <div className="mt-3 flex flex-wrap gap-1.5">
           {recipe.tags.map((t) => (
-            <span key={t} className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+            <span key={t} className="rounded-full bg-secondary px-2.5 py-1 text-[12px] font-medium text-muted-foreground">
               {t}
             </span>
           ))}
@@ -181,7 +175,7 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
       </div>
 
       {/* Macros */}
-      <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="surface rounded-[20px] p-5">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-semibold">
             Nutrition {recipe.isTotal ? '(whole recipe)' : '(per serving)'}
@@ -209,7 +203,7 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
       </div>
 
       {/* Servings adjuster */}
-      <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="surface rounded-[20px] p-5">
         <h2 className="mb-3 font-semibold">Adjust servings</h2>
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">
@@ -255,7 +249,7 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
       <div className="grid grid-cols-2 gap-3">
         <button
           onClick={() => setShowAddToPlan((v) => !v)}
-          className="flex items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.02]"
+          className="flex items-center justify-center gap-2 pressable h-12 rounded-full bg-primary px-4 text-[15px] font-semibold text-primary-foreground"
         >
           <CalendarPlus className="h-4 w-4" />
           Add to plan
@@ -263,7 +257,7 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
         <button
           onClick={addIngredientsToShopping}
           disabled={addedToShopping || loading}
-          className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm font-semibold transition-colors hover:border-primary disabled:opacity-60"
+          className="pressable flex h-12 items-center justify-center gap-2 rounded-full bg-secondary px-4 text-[15px] font-semibold disabled:opacity-60"
         >
           {addedToShopping ? <Check className="h-4 w-4 text-protein" /> : <ShoppingCart className="h-4 w-4" />}
           {addedToShopping ? 'Added!' : locked ? 'Unlock to shop' : 'Add to shopping'}
@@ -305,7 +299,7 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
       )}
 
       {/* Ingredients */}
-      <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="surface rounded-[20px] p-5">
         <div className="mb-3 flex items-center gap-2">
           <ChefHat className="h-5 w-5 text-primary" />
           <h2 className="font-semibold">Ingredients</h2>
@@ -351,7 +345,7 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
       </div>
 
       {/* Directions */}
-      <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="surface rounded-[20px] p-5">
         <div className="mb-3 flex items-center gap-2">
           <ListChecks className="h-5 w-5 text-primary" />
           <h2 className="font-semibold">Directions</h2>
@@ -394,10 +388,10 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
 
       {/* Premium upsell */}
       {locked && (
-        <div className="relative overflow-hidden rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/15 to-card p-5">
+        <div className="surface relative overflow-hidden rounded-[20px] p-5">
           <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500/20">
-              <Crown className="h-5 w-5 text-amber-400" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-foreground">
+              <Crown className="h-5 w-5 text-background" />
             </div>
             <div className="flex-1">
               <h3 className="font-bold">Premium Recipe</h3>
@@ -407,7 +401,7 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
               </p>
               <button
                 onClick={openPaywall}
-                className="mt-3 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-2 text-sm font-bold text-white"
+                className="pressable mt-3 inline-flex h-11 items-center gap-2 rounded-full bg-foreground px-5 text-[15px] font-semibold text-background"
               >
                 <Crown className="h-4 w-4" />
                 Unlock now

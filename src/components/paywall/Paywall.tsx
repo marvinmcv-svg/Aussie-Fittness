@@ -9,8 +9,8 @@ import { AuthModal } from '@/components/auth/AuthModal';
 import { usePaywall } from '@/store/paywall';
 import { usePremium } from '@/store/premium';
 import { getRecipeStats } from '@/lib/recipes';
+import { PRICE_LABEL, PRICE_CURRENCY, REFUND_DAYS } from '@/lib/pricing';
 
-const PRICE_LABEL = '$9.99';
 
 /**
  * Single, global paywall. Mounted once in page.tsx and opened via
@@ -123,7 +123,7 @@ export function Paywall() {
             </div>
             <div className="text-right">
               <div className="text-xl font-bold tracking-tight">{PRICE_LABEL}</div>
-              <div className="text-[11px] text-muted-foreground">AUD</div>
+              <div className="text-[11px] text-muted-foreground">{PRICE_CURRENCY}</div>
             </div>
           </div>
 
@@ -147,7 +147,7 @@ export function Paywall() {
 
           <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-xs text-muted-foreground">
             <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-            14-day money-back guarantee · Secure checkout by Stripe
+            {REFUND_DAYS}-day money-back guarantee · Secure checkout by Stripe
           </p>
         </div>
       </DialogContent>

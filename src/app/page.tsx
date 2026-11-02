@@ -23,11 +23,11 @@ interface Tab {
 }
 
 const BASE_TABS: Tab[] = [
-  { id: 'home', label: 'Home', icon: <Home className="h-5 w-5" /> },
-  { id: 'browse', label: 'Recipes', icon: <Search className="h-5 w-5" /> },
-  { id: 'planner', label: 'Planner', icon: <Calendar className="h-5 w-5" /> },
-  { id: 'shopping', label: 'Shopping', icon: <ShoppingCart className="h-5 w-5" /> },
-  { id: 'profile', label: 'Profile', icon: <User className="h-5 w-5" /> },
+  { id: 'home', label: 'Home', icon: <Home className="h-6 w-6" /> },
+  { id: 'browse', label: 'Recipes', icon: <Search className="h-6 w-6" /> },
+  { id: 'planner', label: 'Planner', icon: <Calendar className="h-6 w-6" /> },
+  { id: 'shopping', label: 'Shopping', icon: <ShoppingCart className="h-6 w-6" /> },
+  { id: 'profile', label: 'Profile', icon: <User className="h-6 w-6" /> },
 ];
 
 // Read initial screen/recipe from URL on first load (deep linking)
@@ -103,7 +103,7 @@ export default function Home_() {
 
   const isAdmin = session?.user?.role === 'ADMIN';
   const tabs = isAdmin
-    ? [...BASE_TABS.slice(0, 4), { id: 'admin' as Screen, label: 'Admin', icon: <Shield className="h-5 w-5" /> }, BASE_TABS[4]]
+    ? [...BASE_TABS.slice(0, 4), { id: 'admin' as Screen, label: 'Admin', icon: <Shield className="h-6 w-6" /> }, BASE_TABS[4]]
     : BASE_TABS;
 
   const navigate = (next: Screen, id?: string) => {
@@ -157,65 +157,74 @@ export default function Home_() {
     }
   };
 
+  const isLanding = screen === 'home';
+
   return (
     <div className="flex min-h-screen flex-col">
-      {/* Top bar */}
-      <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+      {/* Top bar — translucent, iOS style */}
+      <header className="glass sticky top-0 z-30 border-b border-border/60 pt-[env(safe-area-inset-top)]">
+        <div className="mx-auto flex h-12 max-w-5xl items-center justify-between px-4">
           <button
             onClick={() => navigate('home')}
-            className="flex items-center gap-2"
+            className="pressable flex items-center gap-2"
+            aria-label="AussieFit home"
           >
-            <span className="text-xl">🍳</span>
-            <span className="font-extrabold tracking-tight">
-              Aussie<span className="text-primary">Fit</span>
+            <span className="flex h-7 w-7 items-center justify-center rounded-[9px] bg-foreground text-[13px] font-black text-background">
+              A
+            </span>
+            <span className="text-[17px] font-semibold tracking-tight">
+              Aussie<span className="text-brand">Fit</span>
             </span>
           </button>
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="hidden sm:inline">135 recipes</span>
-            {session?.user && (
+          <div className="flex items-center gap-2">
+            {session?.user ? (
               <button
                 onClick={() => signOut({ callbackUrl: '/' })}
-                className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs font-medium transition-colors hover:border-destructive/50 hover:text-destructive"
+                className="pressable inline-flex h-8 items-center gap-1.5 rounded-full bg-secondary px-3 text-[13px] font-medium text-muted-foreground"
                 aria-label="Sign out"
               >
-                <LogOut className="h-3 w-3" aria-hidden="true" />
+                <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
                 <span className="hidden sm:inline">Sign out</span>
               </button>
+            ) : (
+              isLanding && (
+                <button
+                  onClick={() => navigate('profile')}
+                  className="pressable inline-flex h-8 items-center rounded-full bg-foreground px-4 text-[13px] font-semibold text-background"
+                >
+                  Sign in
+                </button>
+              )
             )}
           </div>
         </div>
       </header>
 
       {/* Main content */}
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-5">
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-6 pt-4">
         {renderScreen()}
       </main>
 
       {/* Global paywall — opened from any screen via usePaywall().show() */}
       <Paywall />
 
-      {/* Bottom tab navigation */}
-      <nav className="sticky bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur-md">
-        <div className="mx-auto flex max-w-5xl items-stretch justify-around px-1 pb-[env(safe-area-inset-bottom)] pt-1 sm:px-2">
+      {/* Tab bar — translucent, tinted active state, no indicator line */}
+      <nav className="glass sticky bottom-0 z-30 border-t border-border/60" aria-label="Main">
+        <div className="mx-auto flex max-w-5xl items-stretch justify-around px-1 pb-[max(env(safe-area-inset-bottom),6px)] pt-1.5">
           {tabs.map((tab) => {
             const active = screen === tab.id || (tab.id === 'browse' && screen === 'recipe');
             return (
               <button
                 key={tab.id}
                 onClick={() => navigate(tab.id)}
-                className={`relative flex flex-1 flex-col items-center gap-0.5 py-2 transition-colors ${
-                  active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                className={`flex flex-1 flex-col items-center gap-0.5 py-1 transition-colors ${
+                  active ? 'text-foreground' : 'text-muted-foreground/80 hover:text-foreground'
                 }`}
                 aria-label={tab.label}
+                aria-current={active ? 'page' : undefined}
               >
-                <span className={`transition-transform ${active ? 'scale-110' : ''}`}>
-                  {tab.icon}
-                </span>
-                <span className="text-[10px] font-medium">{tab.label}</span>
-                {active && (
-                  <span className="absolute -top-px h-0.5 w-8 rounded-full bg-primary" />
-                )}
+                <span className={active ? '[&_svg]:stroke-[2.4]' : ''}>{tab.icon}</span>
+                <span className={`text-[10px] ${active ? 'font-semibold' : 'font-medium'}`}>{tab.label}</span>
               </button>
             );
           })}
