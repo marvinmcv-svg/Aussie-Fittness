@@ -22,11 +22,12 @@ Aussie Fitness's real story is fast-food swaps: Dez Cerimagic lost 60kg (135kg �
 - No follower counts, reviews or "limited time" claims: none could be verified.
 - Sanity CMS **not** set up: its connector isn't authorised in this session. Content files are shaped like CMS documents for an easy move later.
 
-## QA results (local production build, 5 Nov 2026)
+## QA results (5 Nov 2026)
 | Check | Result |
 |---|---|
 | Lighthouse desktop | 99–100 performance; 100 accessibility, best practices and SEO on every page tested |
-| Lighthouse mobile | Home 90–91 (EN/ES), Ebooks/About 94–96, recipe pages 87–88 (image LCP on a local server without CDN); 100 a11y/BP/SEO |
+| Lighthouse mobile (local) | Home 90–91 (EN/ES), Ebooks/About 94–96, recipe pages 87–88; 100 a11y/BP/SEO |
+| Lighthouse mobile (Vercel preview) | Home 89–91 (warm), /es 92, recipe page 90, /recipes 88; accessibility 100. Preview-only: SEO 69 (Vercel's `noindex` on previews) and BP 93 (CSP blocks Vercel's preview comment toolbar). Neither applies in production. |
 | CLS | 0 on every page |
 | Responsive | No horizontal scroll at 360, 390, 768, 1024, 1440, 1920 on 8 pages |
 | Keyboard | Skip link, visible 3px focus ring, menu (Esc closes), FAQ all keyboard-operable |
