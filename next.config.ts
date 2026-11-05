@@ -3,7 +3,17 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "standalone",
   reactStrictMode: true,
+  images: { qualities: [65, 75] },
   allowedDevOrigins: ["*.space-z.ai"],
+  // The app moved from / to /app. Keep old shared links working.
+  async redirects() {
+    return [
+      { source: '/', has: [{ type: 'query', key: 'recipe', value: '(?<id>r\\d+)' }], destination: '/recipes/:id', permanent: true },
+      { source: '/', has: [{ type: 'query', key: 'tab' }], destination: '/app', permanent: false },
+      { source: '/', has: [{ type: 'query', key: 'reset' }], destination: '/app', permanent: false },
+      { source: '/', has: [{ type: 'query', key: 'payment' }], destination: '/app', permanent: false },
+    ];
+  },
   async headers() {
     return [
       {

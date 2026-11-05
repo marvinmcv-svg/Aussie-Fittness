@@ -92,7 +92,7 @@ export function SettingsSection() {
           onCancel={() => setShowDeleteAccount(false)}
           onSuccess={() => {
             setShowDeleteAccount(false);
-            signOut({ callbackUrl: '/' });
+            signOut({ callbackUrl: '/app' });
           }}
         />
       </AlertDialog>

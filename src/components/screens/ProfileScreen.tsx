@@ -103,7 +103,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
               </button>
             )}
             <button
-              onClick={() => signOut({ callbackUrl: '/' })}
+              onClick={() => signOut({ callbackUrl: '/app' })}
               className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:border-destructive/50 hover:text-destructive"
             >
               <LogOut className="h-4 w-4" />

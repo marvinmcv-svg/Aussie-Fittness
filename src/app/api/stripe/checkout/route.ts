@@ -73,8 +73,8 @@ export async function POST() {
       // Pass the user ID so the webhook knows who to upgrade
       client_reference_id: user.id,
       customer_email: user.email,
-      success_url: `${env.NEXTAUTH_URL}/?payment=success`,
-      cancel_url: `${env.NEXTAUTH_URL}/?payment=cancelled`,
+      success_url: `${env.NEXTAUTH_URL}/app?payment=success`,
+      cancel_url: `${env.NEXTAUTH_URL}/app?payment=cancelled`,
       metadata: {
         userId: user.id,
         email: user.email,

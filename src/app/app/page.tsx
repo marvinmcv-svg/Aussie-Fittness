@@ -179,7 +179,7 @@ export default function Home_() {
           <div className="flex items-center gap-2">
             {session?.user ? (
               <button
-                onClick={() => signOut({ callbackUrl: '/' })}
+                onClick={() => signOut({ callbackUrl: '/app' })}
                 className="pressable inline-flex h-8 items-center gap-1.5 rounded-full bg-secondary px-3 text-[13px] font-medium text-muted-foreground"
                 aria-label="Sign out"
               >

@@ -204,3 +204,115 @@
 @media (prefers-reduced-motion: reduce) {
   .pressable, .pressable:active { transition: none; transform: none; }
 }
+
+/* ═════════════════════════════════════════════════════════════
+   Marketing site — concept "The Swap" (research/06).
+   Scoped to .site so the app's iOS tokens are untouched.
+   Light editorial palette regardless of system theme.
+   ═════════════════════════════════════════════════════════════ */
+.site {
+  --s-ink: #0b0b0c;
+  --s-paper: #f6f4ef;
+  --s-card: #ffffff;
+  --s-muted: #5f5e5a;        /* 6.1:1 on paper */
+  --s-line: rgb(11 11 12 / 0.12);
+  --s-green: #1fa855;
+  --s-green-ink: #137a3c;    /* green for text on paper, 5.2:1 */
+  --s-sauce: #ff5a1f;
+  --s-ease: cubic-bezier(0.2, 0.7, 0, 1);
+  --s-section: clamp(80px, 12vw, 160px);
+
+  background: var(--s-paper);
+  color: var(--s-ink);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 18px;
+  line-height: 1.55;
+  letter-spacing: -0.006em;
+  color-scheme: light;
+}
+.site h1, .site h2, .site h3, .site .display {
+  font-family: var(--font-site-display), var(--font-inter), system-ui, sans-serif;
+  letter-spacing: -0.04em;
+  font-weight: 800;
+}
+.site .t-display { font-size: clamp(56px, 11vw, 168px); line-height: 0.9; }
+.site .t-h2 { font-size: clamp(38px, 6vw, 84px); line-height: 0.95; }
+.site .t-h3 { font-size: 24px; line-height: 1.15; letter-spacing: -0.02em; }
+.site .t-kicker {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+}
+.site ::selection { background: var(--s-green); color: var(--s-ink); }
+.site :focus-visible { outline: 3px solid var(--s-sauce); outline-offset: 3px; border-radius: 6px; }
+
+.site .s-section { padding-block: var(--s-section); }
+.site .s-wrap { width: 100%; max-width: 1320px; margin-inline: auto; padding-inline: clamp(16px, 4vw, 48px); }
+
+/* Buttons */
+.site .s-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  height: 56px; padding: 0 28px; border-radius: 999px;
+  font-weight: 650; font-size: 17px; letter-spacing: -0.01em;
+  transition: transform 150ms ease, background-color 180ms var(--s-ease), color 180ms var(--s-ease);
+}
+.site .s-btn:active { transform: scale(0.97); }
+.site .s-btn-ink { background: var(--s-ink); color: var(--s-paper); }
+.site .s-btn-ink:hover { background: #26262a; }
+.site .s-btn-line { box-shadow: inset 0 0 0 1.5px var(--s-ink); color: var(--s-ink); }
+.site .s-btn-line:hover { background: var(--s-ink); color: var(--s-paper); }
+.site .s-btn-green { background: var(--s-green); color: var(--s-ink); }
+.site .s-btn-green:hover { background: #25bd61; }
+
+/* Media hover */
+.site .s-media { overflow: hidden; border-radius: 24px; background: #1a1a1c; }
+.site .s-media img { transition: transform 400ms var(--s-ease); }
+.site a:hover .s-media img, .site .s-media:hover img { transform: scale(1.03); }
+
+/* Hero line rise (load) */
+/* Transform only (no opacity) so above-the-fold text counts as painted for LCP. */
+@keyframes s-rise { from { transform: translateY(18px); } to { transform: none; } }
+.site .s-rise { animation: s-rise 700ms var(--s-ease) both; }
+
+/* Scroll-driven reveals — only where supported, so content is never hidden
+   if the feature or JS is missing. */
+@supports (animation-timeline: view()) {
+  @keyframes s-reveal { from { opacity: 0; transform: translateY(32px); } to { opacity: 1; transform: none; } }
+  .site .reveal {
+    animation: s-reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 30%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site .s-rise, .site .reveal { animation: none !important; }
+  .site .s-media img { transition: none; }
+  .site a:hover .s-media img, .site .s-media:hover img { transform: none; }
+}
+
+/* ── Fakeaway Wall (signature) ─────────────────────────────────
+   Fallback: a normal section with a native horizontal scroller.
+   Enhanced: a tall section whose scroll progress (view timeline) drives the
+   track sideways while the inner frame stays pinned. Compositor-only. */
+.site .wall { padding-block: var(--s-section); }
+.site .wall-viewport { overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding-bottom: 4px; }
+.site .wall-viewport::-webkit-scrollbar { display: none; }
+
+@keyframes wall-x { from { transform: translateX(0); } to { transform: translateX(calc(-100% + 100vw)); } }
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .site .wall { height: 520vh; padding-block: 0; view-timeline: --wall block; }
+    .site .wall-sticky {
+      position: sticky; top: 0; height: 100vh; overflow: hidden;
+      display: flex; flex-direction: column; justify-content: center; padding-top: 64px;
+    }
+    .site .wall-viewport { overflow: visible; scroll-snap-type: none; }
+    .site .wall-track {
+      will-change: transform;
+      animation: wall-x linear both;
+      animation-timeline: --wall;
+      animation-range: contain 0% contain 100%;
+    }
+  }
+}
