@@ -357,7 +357,7 @@ function Phone({ t, message }: { t: (typeof dict)['en']['order']; message: strin
           </div>
         </div>
         <div className="flex items-center gap-2 bg-[#0b141a] px-3 pb-5 pt-2">
-          <div className="h-11 flex-1 rounded-full bg-[#2a3942] px-4 text-[14px] leading-[44px] text-[#8696a0]">{t.phoneInput}</div>
+          <div className="h-11 flex-1 rounded-full bg-[#2a3942] px-4 text-[14px] leading-[44px] text-[#aebac1]">{t.phoneInput}</div>
           <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#25d366] text-[#062b17]" aria-hidden="true">➤</span>
         </div>
       </div>
