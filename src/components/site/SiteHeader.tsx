@@ -28,13 +28,14 @@ export function SiteHeader({ locale, altPath }: { locale: Locale; altPath: strin
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--s-line)] bg-[var(--s-paper)]/90 backdrop-blur-md">
       <div className="s-wrap flex h-16 items-center justify-between gap-3 sm:gap-6">
-        <Link href={localePath('/', locale)} className="display text-[19px] leading-none tracking-[-0.03em] sm:text-[22px]">
-          AUSSIE<span className="text-[var(--s-green-ink)]">FITNESS</span>
+        <Link href={localePath('/', locale)} className="flex items-baseline gap-1.5 leading-none">
+          <span className="text-[12px] font-bold tracking-[0.32em]">AUSSIE</span>
+          <span className="display text-[24px] italic">Fitness</span>
         </Link>
 
-        <nav aria-label="Main" className="hidden items-center gap-8 text-[15px] font-medium md:flex">
+        <nav aria-label="Main" className="hidden items-center gap-10 text-[12px] font-semibold uppercase tracking-[0.24em] md:flex">
           {links.map((l) => (
-            <Link key={l.href} href={l.href} className="hover:text-[var(--s-green-ink)]">{l.label}</Link>
+            <Link key={l.href} href={l.href} className="text-[var(--s-muted)] transition-colors hover:text-[var(--s-ink)]">{l.label}</Link>
           ))}
         </nav>
 
@@ -42,11 +43,11 @@ export function SiteHeader({ locale, altPath }: { locale: Locale; altPath: strin
           <Link
             href={altPath}
             hrefLang={locale === 'en' ? 'es' : 'en'}
-            className="hidden h-10 items-center rounded-full px-3 text-[14px] font-semibold text-[var(--s-muted)] hover:text-[var(--s-ink)] sm:inline-flex"
+            className="hidden h-10 items-center px-3 text-[12px] font-semibold tracking-[0.24em] text-[var(--s-muted)] hover:text-[var(--s-ink)] sm:inline-flex"
           >
             {locale === 'en' ? 'ES' : 'EN'}
           </Link>
-          <span className="hidden sm:block"><Link href="/app" className="s-btn s-btn-ink !h-10 !px-5 !text-[15px] whitespace-nowrap">{t.nav.app}</Link></span>
+          <span className="hidden sm:block"><a href={`${localePath('/', locale)}#order`} className="s-btn s-btn-ember !h-10 !px-5 whitespace-nowrap">{t.nav.order}</a></span>
           <button
             type="button"
             className="inline-flex h-10 w-10 items-center justify-center rounded-full md:hidden"
@@ -71,13 +72,16 @@ export function SiteHeader({ locale, altPath }: { locale: Locale; altPath: strin
                 key={l.href}
                 href={l.href}
                 onClick={() => setOpen(false)}
-                className="display s-rise border-b border-[var(--s-line)] py-4 text-[44px] leading-none"
+                className="display s-rise border-b border-[var(--s-line)] py-5 text-[48px] leading-none"
                 style={{ animationDelay: `${i * 60}ms` }}
               >
                 {l.label}
               </Link>
             ))}
-            <Link href="/app" onClick={() => setOpen(false)} className="s-btn s-btn-ink mt-8">
+            <a href={`${localePath('/', locale)}#order`} onClick={() => setOpen(false)} className="s-btn s-btn-ember mt-8">
+              {t.nav.order} →
+            </a>
+            <Link href="/app" onClick={() => setOpen(false)} className="s-btn s-btn-line mt-3">
               {t.nav.app}
             </Link>
             <Link href={altPath} onClick={() => setOpen(false)} className="mt-6 text-[17px] font-semibold text-[var(--s-muted)]">

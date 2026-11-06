@@ -78,9 +78,9 @@ export function RecipeDetailPage({ recipe, locale, siteUrl }: { recipe: Recipe; 
               {recipe.cookTime} {t.min} · {t.serves} {recipe.servings} {recipe.servingsUnit}
             </p>
 
-            <dl className="mt-8 grid grid-cols-4 overflow-hidden rounded-[20px] bg-[var(--s-card)] ring-1 ring-[var(--s-line)]">
+            <dl className="mt-8 grid grid-cols-4 overflow-hidden rounded-[2px] bg-[var(--s-card)] ring-1 ring-[var(--s-line)]">
               {macros.map((m) => (
-                <div key={m.label} className={`px-3 py-5 text-center ${m.strong ? 'bg-[var(--s-green)]' : ''}`}>
+                <div key={m.label} className={`px-3 py-5 text-center ${m.strong ? 'bg-[var(--s-green)] text-[var(--s-paper)]' : ''}`}>
                   <dt className={`text-[12px] font-semibold uppercase tracking-[0.08em] ${m.strong ? '' : 'opacity-70'}`}>{m.label}</dt>
                   <dd className="display mt-1 text-[clamp(26px,3vw,40px)] leading-none">
                     {m.value}
@@ -104,12 +104,17 @@ export function RecipeDetailPage({ recipe, locale, siteUrl }: { recipe: Recipe; 
             </section>
 
             {recipe.premium ? (
-              <div className="mt-10 rounded-[24px] bg-[var(--s-ink)] p-8 text-[var(--s-paper)]">
+              <div className="mt-10 border border-[var(--s-line-strong)] bg-[var(--s-card)] p-8">
                 <h2 className="t-h3">{t.lockedTitle}</h2>
                 <p className="mt-3 text-white/70">{t.lockedBody(totalIngredients, totalSteps)}</p>
-                <Link href={`/app?recipe=${recipe.id}`} className="s-btn s-btn-green mt-6 w-full sm:w-auto">
-                  {t.unlock}
-                </Link>
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                  <a href={`${localePath('/', locale)}#order`} className="s-btn s-btn-ember">
+                    {dict[locale].hero.ctaPrimary} <span className="s-arrow" aria-hidden="true">→</span>
+                  </a>
+                  <Link href={`/app?recipe=${recipe.id}`} className="s-btn s-btn-line">
+                    {t.unlock}
+                  </Link>
+                </div>
               </div>
             ) : (
               <>

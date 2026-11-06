@@ -34,7 +34,7 @@ export function RecipeBrowser({ recipes, locale }: { recipes: RecipeSummary[]; l
             onClick={() => setFilter(o.id)}
             className={`h-11 rounded-full px-5 text-[15px] font-semibold transition-colors ${
               filter === o.id
-                ? 'bg-[var(--s-ink)] text-[var(--s-paper)]'
+                ? 'bg-[var(--s-card)] text-[var(--s-ink)]'
                 : 'bg-[var(--s-card)] text-[var(--s-ink)] ring-1 ring-[var(--s-line)] hover:ring-[var(--s-ink)]'
             }`}
           >

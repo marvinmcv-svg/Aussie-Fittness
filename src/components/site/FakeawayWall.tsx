@@ -13,7 +13,7 @@ import { dict, localePath, type Locale } from '@/content/i18n';
 export function FakeawayWall({ recipes, locale }: { recipes: RecipeSummary[]; locale: Locale }) {
   const t = dict[locale].wall;
   return (
-    <section aria-labelledby="wall-title" className="wall bg-[var(--s-ink)] text-[var(--s-paper)]">
+    <section aria-labelledby="wall-title" className="wall bg-[var(--s-card)] text-[var(--s-ink)]">
       <div className="wall-sticky">
         <div className="s-wrap flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -30,7 +30,7 @@ export function FakeawayWall({ recipes, locale }: { recipes: RecipeSummary[]; lo
                   <div className="s-media relative aspect-[4/5]">
                     <Image src={recipePhoto(r)} alt={r.title} fill quality={65} sizes="(min-width: 640px) 40vw, 78vw" className="object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
-                    <div className="absolute left-5 top-5 rounded-full bg-[var(--s-sauce)] px-3 py-1 text-[13px] font-semibold text-[var(--s-ink)]">
+                    <div className="absolute left-5 top-5 rounded-full bg-[var(--s-sauce)] px-3 py-1 text-[13px] font-semibold text-white">
                       {String(i + 1).padStart(2, '0')} · {t.cravings[r.id] ?? r.category}
                     </div>
                     <div className="absolute inset-x-5 bottom-5 text-white">

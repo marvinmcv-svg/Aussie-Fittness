@@ -3,9 +3,9 @@ import { dict, localePath, type Locale } from '@/content/i18n';
 import { ebooks, PRICES_CHECKED, type Ebook } from '@/content/site';
 
 const tones: Record<Ebook['tone'], string> = {
-  ink: 'bg-[var(--s-ink)] text-[var(--s-paper)]',
-  green: 'bg-[var(--s-green)] text-[var(--s-ink)]',
-  sauce: 'bg-[var(--s-sauce)] text-[var(--s-ink)]',
+  ink: 'bg-[var(--s-card)] text-[var(--s-ink)]',
+  green: 'bg-[var(--s-green)] text-[var(--s-paper)]',
+  sauce: 'bg-[var(--s-sauce)] text-white',
   paper: 'bg-[var(--s-card)] text-[var(--s-ink)] ring-1 ring-[var(--s-line)]',
 };
 
@@ -34,12 +34,16 @@ export function EbookShelf({ locale, full = false }: { locale: Locale; full?: bo
         <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {ebooks.map((b) => (
             <li key={b.id} className="reveal flex flex-col">
-              <div className={`flex aspect-[3/4] flex-col justify-between rounded-[24px] p-6 ${tones[b.tone]}`}>
-                <span className="text-[12px] font-semibold uppercase tracking-[0.14em] opacity-70">Aussie Fitness</span>
+              <div className={`flex aspect-[3/4] flex-col justify-between rounded-[2px] p-6 ${tones[b.tone]}`}>
+                <span className="text-[12px] font-semibold uppercase tracking-[0.14em] opacity-90">Aussie Fitness</span>
                 <div>
                   <div className="display text-[72px] leading-[0.85] tracking-[-0.05em]">{b.recipes}</div>
-                  <div className="text-[13px] font-semibold uppercase tracking-[0.1em] opacity-70">{t.recipes}</div>
-                  <h3 className="mt-4 text-[26px] font-extrabold leading-[1] tracking-[-0.03em]">{b.title}</h3>
+                  <div className="text-[13px] font-semibold uppercase tracking-[0.1em] opacity-90">{t.recipes}</div>
+                  {full ? (
+                    <h2 className="mt-4 text-[26px] font-extrabold leading-[1] tracking-[-0.03em]">{b.title}</h2>
+                  ) : (
+                    <h3 className="mt-4 text-[26px] font-extrabold leading-[1] tracking-[-0.03em]">{b.title}</h3>
+                  )}
                 </div>
               </div>
               <div className="mt-4 flex items-baseline gap-2">
@@ -65,7 +69,10 @@ export function EbookShelf({ locale, full = false }: { locale: Locale; full?: bo
             </li>
           ))}
         </ul>
-        <p className="mt-10 text-[13px] text-[var(--s-muted)]">
+        <a href={`${localePath('/', locale)}#order`} className="s-btn s-btn-ember mt-12">
+          {dict[locale].order.kicker} <span className="s-arrow" aria-hidden="true">→</span>
+        </a>
+        <p className="mt-6 text-[13px] text-[var(--s-muted)]">
           {t.checked} {formatDate(PRICES_CHECKED, locale)}.{full && <> {t.policy}</>}
         </p>
       </div>

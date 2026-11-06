@@ -91,3 +91,28 @@ export const ebooks: Ebook[] = [
 
 /** Fast-food-style recipes from the real recipe set, used by the Fakeaway Wall. */
 export const FAKEAWAY_IDS_HINT = ['pizza', 'burger', 'big mac', 'kebab', 'mcmuffin', 'nachos', 'burrito', 'katsu', 'fries', 'quesadilla', 'parma', 'kfc', 'donut', 'gyros'];
+
+/* ── WhatsApp order funnel ──────────────────────────────────── */
+
+/** Orders go to this WhatsApp number (international format, digits only). */
+export const WHATSAPP_NUMBER = '59177165787';
+
+export function whatsappUrl(text: string) {
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
+}
+
+export type Product = {
+  id: 'app' | Ebook['id'];
+  /** AUD. null = price not verified; confirmed in chat. */
+  price: number | null;
+  recipes: string;
+};
+
+/** Everything the order builder can sell. Prices from PRICES_CHECKED / src/lib/pricing.ts. */
+export const products: Product[] = [
+  { id: 'bundle', price: 79.99, recipes: '300+' },
+  { id: 'elite', price: 44.99, recipes: '150+' },
+  { id: 'fakeaway', price: 38.99, recipes: '80+' },
+  { id: 'mealprep', price: null, recipes: '73' },
+  { id: 'app', price: 9.99, recipes: '135' },
+];

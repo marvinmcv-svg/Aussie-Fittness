@@ -1,4 +1,6 @@
+import Image from 'next/image';
 import Link from 'next/link';
+import { media } from '@/content/media';
 import { SiteShell } from '../SiteShell';
 import { dict, type Locale } from '@/content/i18n';
 import { press, siteSettings } from '@/content/site';
@@ -17,19 +19,25 @@ export function AboutPage({ locale }: { locale: Locale }) {
             <p className="reveal">{a.p2}</p>
           </div>
         </div>
-        {/* Placeholder until the client supplies a real portrait (MISSING_CONTENT.md). */}
-        <figure
-          className="flex aspect-[4/5] flex-col items-center justify-center gap-3 rounded-[24px] border-2 border-dashed border-[var(--s-sauce)] bg-[var(--s-card)] p-8 text-center lg:sticky lg:top-24 lg:self-start"
-          aria-label={a.portrait}
-        >
-          <span className="rounded-full bg-[var(--s-sauce)] px-3 py-1 text-[12px] font-bold uppercase tracking-[0.1em]">
-            [{t.needsInput}]
-          </span>
-          <figcaption className="text-[15px] text-[var(--s-muted)]">{a.portrait} · {siteSettings.creator}</figcaption>
-        </figure>
+        {media.portrait ? (
+          <figure className="s-media relative aspect-[4/5] lg:sticky lg:top-24 lg:self-start">
+            <Image src={media.portrait} alt={`${a.portrait} · ${siteSettings.creator}`} fill sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" />
+          </figure>
+        ) : (
+          /* Placeholder until the client supplies a real portrait (MISSING_CONTENT.md). */
+          <figure
+            className="flex aspect-[4/5] flex-col items-center justify-center gap-3 border border-dashed border-[var(--s-ember)] bg-[var(--s-card)] p-8 text-center lg:sticky lg:top-24 lg:self-start"
+            aria-label={a.portrait}
+          >
+            <span className="bg-[var(--s-ember)] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-white">
+              [{t.needsInput}]
+            </span>
+            <figcaption className="text-[15px] text-[var(--s-muted)]">{a.portrait} · {siteSettings.creator}</figcaption>
+          </figure>
+        )}
       </section>
 
-      <section className="bg-[var(--s-ink)] text-[var(--s-paper)]">
+      <section className="bg-[var(--s-card)] text-[var(--s-ink)]">
         <div className="s-wrap s-section">
           <p className="t-kicker text-[var(--s-green)]">{a.missionTitle}</p>
           <blockquote className="reveal display mt-6 max-w-[18ch] text-[clamp(40px,6vw,88px)] leading-[0.95]">

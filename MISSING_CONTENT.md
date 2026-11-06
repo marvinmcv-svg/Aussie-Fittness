@@ -6,7 +6,7 @@
 | Creator portrait / video (Dez) | About page and home "story" section | `[NEEDS CLIENT INPUT]` frame on `/about` and in the home proof section | MISSING |
 | Logo files (SVG) and brand colours | Header, favicon, OG images | Text wordmark used for now | MISSING |
 | Before/after photos (with consent) | Proof section | Not used; story told in text with press links | OPTIONAL |
-| Instagram/TikTok data export (top posts, comments, cadence) | Social analysis, real FAQ wording | research/03 | MISSING (IG returned 429, FB login-gated) |
+| **Instagram/TikTok photos and videos** (Meta "Download your information" export, or the original files) | Hero video/photo, recipe photos, portrait | Drop into `assets/raw/`, run `node scripts/import-media.mjs`, set paths in `src/content/media.ts` | MISSING (IG returned HTTP 429 to logged-out requests on 5 and 6 Nov; not bypassed) |
 | Real customer testimonials with permission | Trust | Not shown (none verified) | MISSING |
 | Confirmed follower counts | Proof strip | Not shown | MISSING |
 | Ebook cover images | Ebook shelf | Typographic covers used for now | MISSING |

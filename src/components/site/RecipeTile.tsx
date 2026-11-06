@@ -40,7 +40,7 @@ export function RecipeTile({
         <Image src={recipePhoto(recipe)} alt={recipe.title} fill sizes={sizes} priority={priority} quality={65} className="object-cover" />
         <span
           className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-[12px] font-semibold ${
-            recipe.premium ? 'bg-[var(--s-ink)]/80 text-white backdrop-blur' : 'bg-[var(--s-green)] text-[var(--s-ink)]'
+            recipe.premium ? 'bg-black/60 text-white backdrop-blur' : 'bg-[var(--s-green)] text-[var(--s-paper)]'
           }`}
         >
           {recipe.premium ? t.premium : t.free}

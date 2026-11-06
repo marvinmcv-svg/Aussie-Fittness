@@ -12,9 +12,21 @@ export const inter = localFont({
   display: 'swap',
 });
 
-export const bricolage = localFont({
-  src: './bricolage-latin.woff2',
-  weight: '700 800',
+/** Display serif (Fraunces, OFL): roman + italic, variable weight and optical size. */
+export const display = localFont({
+  src: './fraunces-normal-latin.woff2',
+  weight: '400 700',
+  style: 'normal',
   variable: '--font-site-display',
   display: 'swap',
+});
+
+/** Italic as its own face, not preloaded: it's accent-only, so it mustn't compete with the LCP image. */
+export const displayItalic = localFont({
+  src: './fraunces-italic-latin.woff2',
+  weight: '400 700',
+  style: 'italic',
+  variable: '--font-site-display-italic',
+  display: 'swap',
+  preload: false,
 });

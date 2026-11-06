@@ -206,113 +206,162 @@
 }
 
 /* ═════════════════════════════════════════════════════════════
-   Marketing site — concept "The Swap" (research/06).
-   Scoped to .site so the app's iOS tokens are untouched.
-   Light editorial palette regardless of system theme.
+   Marketing site — "The Swap", night edition (research/06, DECISIONS 18).
+   Warm near-black, cream type, one ember CTA colour, green only for
+   protein/macros. Scoped to .site; the app keeps its own tokens.
+   Token names are roles: --s-paper = page, --s-ink = text, --s-card = surface.
    ═════════════════════════════════════════════════════════════ */
 .site {
-  --s-ink: #0b0b0c;
-  --s-paper: #f6f4ef;
-  --s-card: #ffffff;
-  --s-muted: #5f5e5a;        /* 6.1:1 on paper */
-  --s-line: rgb(11 11 12 / 0.12);
-  --s-green: #1fa855;
-  --s-green-ink: #137a3c;    /* green for text on paper, 5.2:1 */
-  --s-sauce: #ff5a1f;
+  --s-paper: #0f0e0c;        /* page */
+  --s-card: #181613;         /* raised surface */
+  --s-card-2: #211e1a;
+  --s-ink: #f3eee6;          /* text / light pill */
+  --s-muted: #a39d92;        /* 7.4:1 on page */
+  --s-line: rgb(243 238 230 / 0.12);
+  --s-line-strong: rgb(243 238 230 / 0.28);
+  --s-ember: #c9431c;        /* CTA background — white text 4.7:1 */
+  --s-ember-hover: #d94f27;
+  --s-ember-text: #f27a52;   /* ember for text on the dark page, 6.4:1 */
+  --s-green: #4fd88a;        /* protein / macros only */
+  --s-green-ink: #4fd88a;
+  --s-sauce: #c9431c;
   --s-ease: cubic-bezier(0.2, 0.7, 0, 1);
-  --s-section: clamp(80px, 12vw, 160px);
+  --s-section: clamp(88px, 12vw, 168px);
 
-  background: var(--s-paper);
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(1200px 700px at 85% -10%, rgb(232 88 46 / 0.16), transparent 60%),
+    radial-gradient(900px 600px at -10% 30%, rgb(122 31 43 / 0.18), transparent 60%),
+    var(--s-paper);
   color: var(--s-ink);
   font-family: var(--font-inter), system-ui, sans-serif;
   font-size: 18px;
-  line-height: 1.55;
-  letter-spacing: -0.006em;
-  color-scheme: light;
+  line-height: 1.6;
+  letter-spacing: -0.004em;
+  color-scheme: dark;
+}
+/* Film grain — fixed, cheap (one tiny SVG), never intercepts input */
+.site::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: 0.07;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 .site h1, .site h2, .site h3, .site .display {
-  font-family: var(--font-site-display), var(--font-inter), system-ui, sans-serif;
-  letter-spacing: -0.04em;
-  font-weight: 800;
+  font-family: var(--font-site-display), Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  font-variation-settings: "opsz" 144;
 }
-.site .t-display { font-size: clamp(56px, 11vw, 168px); line-height: 0.9; }
-.site .t-h2 { font-size: clamp(38px, 6vw, 84px); line-height: 0.95; }
-.site .t-h3 { font-size: 24px; line-height: 1.15; letter-spacing: -0.02em; }
+.site em, .site .ital, .site .italic { font-family: var(--font-site-display-italic), var(--font-site-display), Georgia, serif; font-style: italic; font-weight: 400; }
+.site .t-display { font-size: clamp(54px, 10vw, 156px); line-height: 0.92; }
+.site .t-h2 { font-size: clamp(38px, 6vw, 88px); line-height: 0.98; }
+.site .t-h3 { font-size: 26px; line-height: 1.15; letter-spacing: -0.015em; }
 .site .t-kicker {
   font-family: var(--font-inter), system-ui, sans-serif;
-  font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.28em; text-transform: uppercase;
 }
-.site ::selection { background: var(--s-green); color: var(--s-ink); }
-.site :focus-visible { outline: 3px solid var(--s-sauce); outline-offset: 3px; border-radius: 6px; }
+@media (max-width: 640px) {
+  .site .t-kicker { letter-spacing: 0.16em; }
+  .site .s-btn { letter-spacing: 0.16em; }
+}
+.site ::selection { background: var(--s-ember); color: #fff; }
+.site :focus-visible { outline: 2px solid var(--s-ember); outline-offset: 3px; border-radius: 4px; }
 
 .site .s-section { padding-block: var(--s-section); }
 .site .s-wrap { width: 100%; max-width: 1320px; margin-inline: auto; padding-inline: clamp(16px, 4vw, 48px); }
+.site .s-rule { border-top: 1px solid var(--s-line); }
 
-/* Buttons */
+/* Buttons — sharp-cornered, wide-tracked, like a menu card */
 .site .s-btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
-  height: 56px; padding: 0 28px; border-radius: 999px;
-  font-weight: 650; font-size: 17px; letter-spacing: -0.01em;
-  transition: transform 150ms ease, background-color 180ms var(--s-ease), color 180ms var(--s-ease);
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.75rem;
+  height: 56px; padding: 0 30px;
+  font-size: 13px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+  transition: transform 150ms ease, background-color 200ms var(--s-ease), color 200ms var(--s-ease), box-shadow 200ms var(--s-ease);
 }
-.site .s-btn:active { transform: scale(0.97); }
+.site .s-btn:active { transform: scale(0.98); }
+.site .s-btn .s-arrow { transition: transform 300ms var(--s-ease); }
+.site .s-btn:hover .s-arrow { transform: translateX(4px); }
+.site .s-btn-ember { background: var(--s-ember); color: #fff; }
+.site .s-btn-ember:hover { background: var(--s-ember-hover); }
 .site .s-btn-ink { background: var(--s-ink); color: var(--s-paper); }
-.site .s-btn-ink:hover { background: #26262a; }
-.site .s-btn-line { box-shadow: inset 0 0 0 1.5px var(--s-ink); color: var(--s-ink); }
-.site .s-btn-line:hover { background: var(--s-ink); color: var(--s-paper); }
-.site .s-btn-green { background: var(--s-green); color: var(--s-ink); }
-.site .s-btn-green:hover { background: #25bd61; }
+.site .s-btn-ink:hover { background: #fff; }
+.site .s-btn-green { background: var(--s-ember); color: #fff; }
+.site .s-btn-green:hover { background: var(--s-ember-hover); }
+.site .s-btn-line { box-shadow: inset 0 0 0 1px var(--s-line-strong); color: var(--s-ink); }
+.site .s-btn-line:hover { box-shadow: inset 0 0 0 1px var(--s-ink); }
+.site .s-link { position: relative; font-size: 13px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; }
+.site .s-link::after { content: ""; position: absolute; left: 0; right: 0; bottom: -6px; height: 1px; background: currentColor; transform-origin: left; transition: transform 400ms var(--s-ease); }
+.site .s-link:hover::after { transform: scaleX(0.35); }
 
-/* Media hover */
-.site .s-media { overflow: hidden; border-radius: 24px; background: #1a1a1c; }
-.site .s-media img { transition: transform 400ms var(--s-ease); }
-.site a:hover .s-media img, .site .s-media:hover img { transform: scale(1.03); }
+/* Media */
+.site .s-media { overflow: hidden; border-radius: 2px; background: var(--s-card); }
+.site .s-media img { transition: transform 900ms var(--s-ease), filter 600ms var(--s-ease); filter: saturate(0.92) contrast(1.04); }
+.site a:hover .s-media img, .site .s-media:hover img { transform: scale(1.04); filter: saturate(1.05) contrast(1.06); }
 
-/* Hero line rise (load) */
-/* Transform only (no opacity) so above-the-fold text counts as painted for LCP. */
+/* Load: line-mask reveal (transform only, so LCP isn't delayed) */
+.site .s-mask { display: block; overflow: hidden; padding-bottom: 0.06em; }
+.site .s-mask > span { display: block; animation: s-up 1000ms var(--s-ease) both; }
+@keyframes s-up { from { transform: translateY(105%); } to { transform: none; } }
+.site .s-rise { animation: s-rise 900ms var(--s-ease) both; }
 @keyframes s-rise { from { transform: translateY(18px); } to { transform: none; } }
-.site .s-rise { animation: s-rise 700ms var(--s-ease) both; }
+.site .s-fade { animation: s-fade 500ms var(--s-ease) both; }
+@keyframes s-fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
-/* Scroll-driven reveals — only where supported, so content is never hidden
-   if the feature or JS is missing. */
+/* Scroll-driven reveals — only where supported, never hiding content otherwise */
 @supports (animation-timeline: view()) {
-  @keyframes s-reveal { from { opacity: 0; transform: translateY(32px); } to { opacity: 1; transform: none; } }
-  .site .reveal {
-    animation: s-reveal linear both;
-    animation-timeline: view();
-    animation-range: entry 0% cover 30%;
-  }
+  @keyframes s-reveal { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: none; } }
+  .site .reveal { animation: s-reveal linear both; animation-timeline: view(); animation-range: entry 0% cover 28%; }
+  @keyframes s-zoom { from { transform: scale(1.12); } to { transform: scale(1); } }
+  .site .reveal-zoom img { animation: s-zoom linear both; animation-timeline: view(); animation-range: entry 0% exit 0%; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .site .s-rise, .site .reveal { animation: none !important; }
-  .site .s-media img { transition: none; }
-  .site a:hover .s-media img, .site .s-media:hover img { transform: none; }
-}
+/* Marquee of cravings */
+.site .marquee { display: flex; overflow: hidden; mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.site .marquee-track { display: flex; flex-shrink: 0; gap: 3rem; padding-right: 3rem; animation: marquee 38s linear infinite; }
+@keyframes marquee { to { transform: translateX(-100%); } }
 
-/* ── Fakeaway Wall (signature) ─────────────────────────────────
-   Fallback: a normal section with a native horizontal scroller.
-   Enhanced: a tall section whose scroll progress (view timeline) drives the
-   track sideways while the inner frame stays pinned. Compositor-only. */
+/* ── Fakeaway Wall ─────────────────────────────────────────── */
 .site .wall { padding-block: var(--s-section); }
 .site .wall-viewport { overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding-bottom: 4px; }
 .site .wall-viewport::-webkit-scrollbar { display: none; }
-
 @keyframes wall-x { from { transform: translateX(0); } to { transform: translateX(calc(-100% + 100vw)); } }
-
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
     .site .wall { height: 520vh; padding-block: 0; view-timeline: --wall block; }
-    .site .wall-sticky {
-      position: sticky; top: 0; height: 100vh; overflow: hidden;
-      display: flex; flex-direction: column; justify-content: center; padding-top: 64px;
-    }
+    .site .wall-sticky { position: sticky; top: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; justify-content: center; padding-top: 64px; }
     .site .wall-viewport { overflow: visible; scroll-snap-type: none; }
-    .site .wall-track {
-      will-change: transform;
-      animation: wall-x linear both;
-      animation-timeline: --wall;
-      animation-range: contain 0% contain 100%;
-    }
+    .site .wall-track { will-change: transform; animation: wall-x linear both; animation-timeline: --wall; animation-range: contain 0% contain 100%; }
   }
+}
+
+/* ── Order builder ─────────────────────────────────────────── */
+.site .opt {
+  display: block; width: 100%; text-align: left; padding: 18px 20px; border: 1px solid var(--s-line);
+  background: rgb(243 238 230 / 0.02); transition: border-color 200ms var(--s-ease), background-color 200ms var(--s-ease);
+}
+.site .opt:hover { border-color: var(--s-line-strong); }
+.site .opt[aria-pressed="true"], .site .opt[aria-checked="true"] { border-color: var(--s-ink); background: rgb(243 238 230 / 0.07); }
+.site .field {
+  width: 100%; height: 56px; padding: 0 18px; background: transparent; border: 1px solid var(--s-line);
+  color: var(--s-ink); font-size: 17px; transition: border-color 200ms var(--s-ease);
+}
+.site textarea.field { height: auto; padding: 14px 18px; }
+.site .field::placeholder { color: rgb(163 157 146 / 0.7); }
+.site .field:focus { outline: none; border-color: var(--s-ink); }
+.site .field[aria-invalid="true"] { border-color: var(--s-ember); }
+
+/* WhatsApp phone preview */
+.site .wa-bubble-in { animation: wa-in 380ms var(--s-ease) both; }
+@keyframes wa-in { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: none; } }
+.site .wa-dot { width: 6px; height: 6px; border-radius: 999px; background: #9aa5ab; animation: wa-dot 1.1s infinite ease-in-out; }
+.site .wa-dot:nth-child(2) { animation-delay: 0.15s; } .site .wa-dot:nth-child(3) { animation-delay: 0.3s; }
+@keyframes wa-dot { 0%, 80%, 100% { opacity: 0.3; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+.site .wa-pulse { animation: wa-pulse 2.6s ease-out infinite; }
+@keyframes wa-pulse { 0% { box-shadow: 0 0 0 0 rgb(37 211 102 / 0.5); } 70%, 100% { box-shadow: 0 0 0 18px rgb(37 211 102 / 0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .site .s-rise, .site .s-mask > span, .site .reveal, .site .reveal-zoom img, .site .s-fade,
+  .site .wa-bubble-in, .site .wa-dot, .site .wa-pulse, .site .marquee-track { animation: none !important; }
+  .site .s-media img { transition: none; }
+  .site a:hover .s-media img, .site .s-media:hover img { transform: none; }
 }

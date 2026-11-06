@@ -1,5 +1,10 @@
 # Handoff: Aussie Fitness website
 
+## Update 6 Nov 2026: night edition + WhatsApp funnel
+- **New look:** dark, warm and editorial: Fraunces serif with italics, one ember CTA, a marquee, film grain and sharp corners.
+- **Order on WhatsApp:** a 4-step builder (goal & cravings → pack + extras → details → send) with a live phone preview. Send opens `wa.me/59177165787` with the order pre-written. There's also a floating WhatsApp button on every page.
+- **Your photos and videos:** `scripts/import-media.mjs` + `src/content/media.ts` (Instagram blocked automated access).
+
 ## Concept: "The Swap"
 Aussie Fitness's real story is fast-food swaps: Dez Cerimagic lost 60kg (135kg → 75kg) without giving up takeaway (NZ Herald, LA FM, The Nightly). The site dramatises that idea:
 

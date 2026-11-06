@@ -21,6 +21,10 @@ If something breaks, open the file's **History** on GitHub and revert your last 
 | Headlines, buttons, FAQ (English) | `src/content/i18n.ts` | the `en` block |
 | Same in Spanish | `src/content/i18n.ts` | the `es` block |
 | The app's price label | `src/lib/pricing.ts` | `PRICE_LABEL` (must match the Stripe price) |
+| WhatsApp number orders go to | `src/content/site.ts` | `WHATSAPP_NUMBER` (digits only, with country code) |
+| Order builder prices | `src/content/site.ts` | `products` |
+| Order builder wording / WhatsApp message | `src/content/i18n.ts` | the `order` block |
+| Hero video/photo, Dez's portrait | `src/content/media.ts` | after importing files (see README) |
 
 ## Users, premium and refunds
 Use the app's **Admin** tab (sign in at `/app` with an admin account) to find users, grant or remove premium, and add accounts.

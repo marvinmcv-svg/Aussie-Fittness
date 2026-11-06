@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { SiteHeader } from './SiteHeader';
+import { WhatsAppFloat } from './WhatsAppFloat';
 import { dict, localePath, type Locale } from '@/content/i18n';
 import { siteSettings } from '@/content/site';
 
@@ -25,10 +26,14 @@ export function SiteShell({
       </a>
       <SiteHeader locale={locale} altPath={altPath} />
       <main id="main">{children}</main>
-      <footer className="bg-[var(--s-ink)] text-[var(--s-paper)]">
+      <WhatsAppFloat locale={locale} />
+      <footer className="bg-[var(--s-card)] text-[var(--s-ink)]">
         <div className="s-wrap grid gap-12 py-16 md:grid-cols-[1.4fr_1fr_1fr]">
           <div>
-            <div className="display text-[clamp(40px,7vw,88px)] leading-[0.9]">AUSSIE<br />FITNESS</div>
+            <div className="leading-[0.9]">
+              <span className="block text-[14px] font-bold tracking-[0.4em]">AUSSIE</span>
+              <span className="display block text-[clamp(56px,9vw,120px)] italic">Fitness</span>
+            </div>
             <p className="mt-5 max-w-sm text-[15px] text-white/65">{t.footer.tagline}</p>
           </div>
           <nav aria-label="Footer" className="grid content-start gap-3 text-[15px]">

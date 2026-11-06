@@ -36,4 +36,9 @@ Vercel project **aussiefit** (team marvinmcv-svg's projects), functions in `syd1
 | `data/recipes.json` | Full recipes (**server only**) |
 | `research/`, `DECISIONS.md`, `MISSING_CONTENT.md`, `ASSET_RIGHTS_REVIEW.md` | Brand research and project decisions |
 
+## Adding real photos and videos
+1. Put the files in `assets/raw/`.
+2. Run `node scripts/import-media.mjs`. Images are converted to WebP and written to `public/brand/`; videos are copied.
+3. Set `heroVideo`, `heroImage` and `portrait` in `src/content/media.ts`.
+
 Editing content without code: see `ADMIN_GUIDE.md`.
