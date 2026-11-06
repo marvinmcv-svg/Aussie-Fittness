@@ -1,5 +1,10 @@
 # Handoff: Aussie Fitness website
 
+## Update 6 Nov 2026 (later): real media, new copy, conversion audit
+- **Real media:** 31 images from Dez's own store, Payhip, Beacons and YouTube replace the placeholders in the hero, the proof section (before/after), the story page and the ebook covers. A new **Shorts reel** shows his 8 most-watched videos with public view counts.
+- **Copy:** rewritten in Dez's voice (EN + ES) with the `copywriting` skill in `.claude/skills/`.
+- **Audit:** `CONVERSION_AUDIT.md`. Top three: turn on analytics + TikTok/Meta pixels, add instant Shopify checkout next to WhatsApp, add email capture.
+
 ## Update 6 Nov 2026: night edition + WhatsApp funnel
 - **New look:** dark, warm and editorial: Fraunces serif with italics, one ember CTA, a marquee, film grain and sharp corners.
 - **Order on WhatsApp:** a 4-step builder (goal & cravings → pack + extras → details → send) with a live phone preview. Send opens `wa.me/59177165787` with the order pre-written. There's also a floating WhatsApp button on every page.

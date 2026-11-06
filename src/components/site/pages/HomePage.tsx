@@ -5,6 +5,10 @@ import { FakeawayWall } from '../FakeawayWall';
 import { OrderBuilder } from '../OrderBuilder';
 import { RecipeTile, toSummary } from '../RecipeTile';
 import { Faq } from '../Faq';
+import { ShortsReel } from '../ShortsReel';
+import { EbookShelf } from '../EbookShelf';
+import { CHANNEL_URL } from '@/content/shorts';
+import { PRICE_LABEL } from '@/lib/pricing';
 import { dict, localePath, type Locale } from '@/content/i18n';
 import { press, siteSettings } from '@/content/site';
 import { media } from '@/content/media';
@@ -20,7 +24,6 @@ export function HomePage({ locale }: { locale: Locale }) {
   const wall = WALL_IDS.map((id) => getRecipeById(id)).filter(Boolean) as Recipe[];
   const allFree = getSiteRecipes().filter((r) => !r.premium);
   const free = allFree.slice(0, 4);
-  const heroRecipe = getRecipeById('r031');
   const orderHref = `${localePath('/', locale)}#order`;
 
   return (
@@ -60,21 +63,18 @@ export function HomePage({ locale }: { locale: Locale }) {
                 aria-label={media.heroAlt}
               />
             ) : (
-              <Image src={media.heroImage} alt={media.heroAlt} fill priority quality={70} sizes="(min-width: 1024px) 34vw, 92vw" className="object-cover" />
+              <Image src={media.heroImage} alt={media.heroAlt} fill priority quality={75} sizes="(min-width: 1024px) 34vw, 92vw" className="object-cover" />
             )}
           </div>
-          {heroRecipe && (
-            <figcaption className="absolute -bottom-6 left-4 right-4 flex items-end justify-between gap-4 border border-[var(--s-line)] bg-[var(--s-paper)]/90 px-5 py-4 backdrop-blur-md sm:-left-10 sm:right-auto sm:min-w-[300px]">
+          <figcaption className="absolute -bottom-6 left-4 right-4 border border-[var(--s-line)] bg-[var(--s-paper)]/90 backdrop-blur-md sm:-left-10 sm:right-auto sm:min-w-[300px]">
+            <a href={CHANNEL_URL} target="_blank" rel="noopener noreferrer" className="flex items-end justify-between gap-6 px-5 py-4">
               <div>
-                <div className="t-kicker text-[10px] text-[var(--s-muted)]">No. 031</div>
-                <div className="display mt-1 text-[20px] leading-tight">{heroRecipe.title}</div>
+                <div className="t-kicker text-[10px] text-[var(--s-muted)]">{t.hero.mediaKicker}</div>
+                <div className="mt-1 text-[14px] text-[var(--s-muted)]">{t.hero.mediaStatLabel} ↗</div>
               </div>
-              <div className="text-right">
-                <div className="display text-[36px] leading-none text-[var(--s-green)]">{heroRecipe.protein}g</div>
-                <div className="text-[11px] uppercase tracking-[0.2em] text-[var(--s-muted)]">{t.recipes.protein}</div>
-              </div>
-            </figcaption>
-          )}
+              <div className="display text-[40px] leading-none text-[var(--s-green)]">{t.hero.mediaStat}</div>
+            </a>
+          </figcaption>
         </figure>
       </section>
 
@@ -99,6 +99,20 @@ export function HomePage({ locale }: { locale: Locale }) {
             {t.proof.stat}
           </div>
           <p className="display mt-6 max-w-[16ch] text-[clamp(26px,3vw,38px)] italic leading-[1.1]">{t.proof.statLabel}</p>
+          <div className="mt-10 grid max-w-[34rem] grid-cols-2 gap-3" role="img" aria-label={t.proof.beforeAfterAlt}>
+            {[
+              { src: media.before, label: t.proof.before },
+              { src: media.after, label: t.proof.after },
+            ].map((p) => (
+              <figure key={p.label} className="s-media relative aspect-[1/2] max-h-[440px] w-full">
+                <Image src={p.src} alt="" fill quality={65} sizes="(min-width: 1024px) 17vw, 46vw" className="object-cover" />
+                <figcaption className="absolute bottom-3 left-3 bg-black/60 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white backdrop-blur-sm">
+                  {p.label}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+          <p className="mt-3 max-w-[34rem] text-[12px] text-[var(--s-muted)]">{t.proof.disclaimer}</p>
         </div>
         <div className="reveal flex flex-col justify-end">
           <p className="max-w-[34rem] text-[19px] text-[var(--s-muted)]">{t.proof.body}</p>
@@ -118,6 +132,9 @@ export function HomePage({ locale }: { locale: Locale }) {
         </div>
       </section>
 
+      {/* ── Proof you can check: most-watched Shorts ──── */}
+      <ShortsReel locale={locale} />
+
       {/* ── Signature: Fakeaway Wall ──────────────────── */}
       <FakeawayWall recipes={wall.map(toSummary)} locale={locale} />
 
@@ -135,8 +152,44 @@ export function HomePage({ locale }: { locale: Locale }) {
         <OrderBuilder locale={locale} />
       </section>
 
+      {/* ── The app (cheapest way in) ─────────────────── */}
+      <section className="border-t border-[var(--s-line)]">
+        <div className="s-wrap s-section grid gap-14 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center lg:gap-24">
+          <figure className="reveal s-media relative aspect-[876/700]">
+            <Image src={media.mealprep} alt={t.about.mealprepAlt} fill quality={65} sizes="(min-width: 1024px) 40vw, 92vw" className="object-cover" />
+          </figure>
+          <div className="reveal">
+            <p className="t-kicker text-[var(--s-green)]">{t.how.kicker}</p>
+            <h2 className="mt-4 text-[clamp(34px,4.4vw,60px)] leading-[1.02]">{t.how.title}</h2>
+            <ol className="mt-10 space-y-7">
+              {t.how.steps.map((st, i) => (
+                <li key={st.t} className="grid grid-cols-[40px_minmax(0,1fr)] gap-4">
+                  <span className="display text-[28px] leading-none text-[var(--s-ember-text)]">{i + 1}</span>
+                  <div>
+                    <h3 className="font-sans text-[18px] font-semibold tracking-normal">{st.t}</h3>
+                    <p className="mt-1 text-[16px] text-[var(--s-muted)]">{st.b}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            <div className="mt-10 flex flex-col gap-5 border-t border-[var(--s-line)] pt-8 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="display text-[44px] leading-none">{PRICE_LABEL} <span className="text-[15px] not-italic text-[var(--s-muted)]">AUD</span></div>
+                <div className="mt-2 text-[14px] text-[var(--s-muted)]">{t.how.priceLine} · {t.how.priceNote}</div>
+              </div>
+              <Link href="/app" className="s-btn s-btn-ember">
+                {t.how.cta} <span className="s-arrow" aria-hidden="true">→</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── The cookbooks ──────────────────────────────── */}
+      <EbookShelf locale={locale} />
+
       {/* ── Free recipes ───────────────────────────────── */}
-      <section className="s-wrap pb-[var(--s-section)]">
+      <section className="s-wrap s-section">
         <div className="reveal flex flex-wrap items-end justify-between gap-6 border-t border-[var(--s-line)] pt-12">
           <h2 className="t-h2 max-w-[14ch]">{t.recipes.title}</h2>
           <Link href={localePath('/recipes', locale)} className="s-link">{t.hero.ctaSecondary} →</Link>

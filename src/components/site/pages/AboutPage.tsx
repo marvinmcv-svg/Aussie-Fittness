@@ -21,7 +21,7 @@ export function AboutPage({ locale }: { locale: Locale }) {
         </div>
         {media.portrait ? (
           <figure className="s-media relative aspect-[4/5] lg:sticky lg:top-24 lg:self-start">
-            <Image src={media.portrait} alt={`${a.portrait} · ${siteSettings.creator}`} fill sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" />
+            <Image src={media.portrait} alt={a.kitchenAlt} fill quality={75} sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" />
           </figure>
         ) : (
           /* Placeholder until the client supplies a real portrait (MISSING_CONTENT.md). */

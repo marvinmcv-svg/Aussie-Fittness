@@ -45,6 +45,8 @@ export type Ebook = {
   priceRegular: number | null;
   url: string;
   tone: 'ink' | 'green' | 'sauce' | 'paper';
+  /** Official cover art from the store listing (public/brand/). */
+  cover: string;
 };
 
 export const PRICES_CHECKED = '2026-11-05';
@@ -52,6 +54,7 @@ export const PRICES_CHECKED = '2026-11-05';
 export const ebooks: Ebook[] = [
   {
     id: 'bundle',
+    cover: '/brand/cover-bundle.webp',
     title: 'The Bundle',
     recipes: '300+',
     priceSale: 79.99,
@@ -61,6 +64,7 @@ export const ebooks: Ebook[] = [
   },
   {
     id: 'elite',
+    cover: '/brand/cover-elite.webp',
     title: 'Elite Low Calorie / High Protein',
     recipes: '150+',
     priceSale: 44.99,
@@ -70,6 +74,7 @@ export const ebooks: Ebook[] = [
   },
   {
     id: 'fakeaway',
+    cover: '/brand/cover-fakeaway.webp',
     title: 'Fakeaway Favourites',
     recipes: '80+',
     priceSale: 38.99,
@@ -79,6 +84,7 @@ export const ebooks: Ebook[] = [
   },
   {
     id: 'mealprep',
+    cover: '/brand/cover-mealprep.webp',
     title: 'High Protein Meal Prep',
     recipes: '73',
     // Sold out on Shopify at check time; the creator's live link is Payhip.

@@ -1,13 +1,8 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { dict, localePath, type Locale } from '@/content/i18n';
-import { ebooks, PRICES_CHECKED, type Ebook } from '@/content/site';
+import { ebooks, PRICES_CHECKED } from '@/content/site';
 
-const tones: Record<Ebook['tone'], string> = {
-  ink: 'bg-[var(--s-card)] text-[var(--s-ink)]',
-  green: 'bg-[var(--s-green)] text-[var(--s-paper)]',
-  sauce: 'bg-[var(--s-sauce)] text-white',
-  paper: 'bg-[var(--s-card)] text-[var(--s-ink)] ring-1 ring-[var(--s-line)]',
-};
 
 function formatDate(iso: string, locale: Locale) {
   return new Date(iso + 'T00:00:00').toLocaleDateString(locale === 'es' ? 'es' : 'en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -31,21 +26,22 @@ export function EbookShelf({ locale, full = false }: { locale: Locale; full?: bo
             </Link>
           </div>
         )}
-        <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <ul className="mt-12 grid grid-cols-2 gap-x-4 gap-y-10 lg:grid-cols-4 lg:gap-x-5">
           {ebooks.map((b) => (
             <li key={b.id} className="reveal flex flex-col">
-              <div className={`flex aspect-[3/4] flex-col justify-between rounded-[2px] p-6 ${tones[b.tone]}`}>
-                <span className="text-[12px] font-semibold uppercase tracking-[0.14em] opacity-90">Aussie Fitness</span>
-                <div>
-                  <div className="display text-[72px] leading-[0.85] tracking-[-0.05em]">{b.recipes}</div>
-                  <div className="text-[13px] font-semibold uppercase tracking-[0.1em] opacity-90">{t.recipes}</div>
-                  {full ? (
-                    <h2 className="mt-4 text-[26px] font-extrabold leading-[1] tracking-[-0.03em]">{b.title}</h2>
-                  ) : (
-                    <h3 className="mt-4 text-[26px] font-extrabold leading-[1] tracking-[-0.03em]">{b.title}</h3>
-                  )}
+              <a href={b.url} target="_blank" rel="noopener noreferrer" className="group block" tabIndex={-1} aria-hidden="true">
+                <div className="s-media relative aspect-[1414/2000] shadow-[0_30px_60px_-30px_rgba(0,0,0,0.8)]">
+                  <Image src={b.cover} alt="" fill quality={75} sizes="(min-width: 1024px) 24vw, (min-width: 640px) 46vw, 92vw" className="object-cover" />
                 </div>
+              </a>
+              <div className="mt-5 text-[13px] font-semibold uppercase tracking-[0.14em] text-[var(--s-muted)]">
+                {b.recipes} {t.recipes}
               </div>
+              {full ? (
+                <h2 className="mt-1 text-[clamp(18px,2.2vw,24px)] font-extrabold leading-[1.05] tracking-[-0.02em]">{b.title}</h2>
+              ) : (
+                <h3 className="mt-1 text-[clamp(18px,2.2vw,24px)] font-extrabold leading-[1.05] tracking-[-0.02em]">{b.title}</h3>
+              )}
               <div className="mt-4 flex items-baseline gap-2">
                 {b.priceSale !== null ? (
                   <>

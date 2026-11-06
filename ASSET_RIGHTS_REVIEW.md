@@ -8,3 +8,5 @@
 | AI-generated food images | No third-party rights issue, but they misrepresent the real food | Client | Replace before launch |
 | Press article links (NZ Herald, LA FM, The Nightly) | Linking is fine; no logos or article photos used | — | OK |
 | Fonts: Bricolage Grotesque, Inter | SIL Open Font License | — | OK |
+| **Creator's public media** (6 Nov 2026): ebook covers + food photos cut from them, before/after selfies, profile and kitchen photos of Dez, frames from 13 YouTube Shorts (`public/brand/`, sources in `assets/brand-manifest.json`) | The creator's own images, taken from his store, Payhip, Beacons and YouTube. Covered by the same permission as the recipes. Original Payhip before/after file carried **GPS EXIF**; it was stripped on export and the raw file is not committed | Dez Cerimagic | Confirm in writing alongside the recipe permission |
+| Copywriting + CRO skills in `.claude/skills/` | MIT, © 2025 Corey Haines (LICENSE copied into each skill) | — | OK |
