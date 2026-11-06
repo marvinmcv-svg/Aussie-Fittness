@@ -1,24 +1,18 @@
 import Link from 'next/link';
-import { ChefHat } from 'lucide-react';
+import { display, displayItalic } from './fonts';
+import { dict } from '@/content/i18n';
 
 export default function NotFound() {
+  const t = dict.en.notFound;
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-6 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-        <ChefHat className="h-8 w-8 text-muted-foreground" />
+    <div className={`site ${display.variable} ${displayItalic.variable} flex min-h-screen flex-col items-start justify-center gap-6 px-[clamp(16px,6vw,96px)]`}>
+      <p className="t-kicker text-[var(--s-green-ink)]">404</p>
+      <h1 className="t-display max-w-[10ch]">{t.title}</h1>
+      <p className="text-[19px] text-[var(--s-muted)]">{t.sub}</p>
+      <div className="flex flex-wrap gap-3">
+        <Link href="/" className="s-btn s-btn-ink">{t.home}</Link>
+        <Link href="/recipes" className="s-btn s-btn-line">{dict.en.nav.recipes}</Link>
       </div>
-      <div>
-        <h2 className="text-xl font-bold">Page not found</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist.
-        </p>
-      </div>
-      <Link
-        href="/"
-        className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-transform hover:scale-105"
-      >
-        Back to home
-      </Link>
     </div>
   );
 }

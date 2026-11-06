@@ -106,7 +106,7 @@ export function BrowseScreen({ onNavigate, initialCategory = 'all' }: BrowseScre
               onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
               placeholder="Search recipes, ingredients, tags..."
               aria-label="Search recipes"
-              className="w-full rounded-full border border-border bg-card py-2.5 pl-10 pr-4 text-sm outline-none transition-colors focus:border-primary"
+              className="w-full rounded-full surface py-2.5 pl-10 pr-4 text-sm outline-none transition-colors focus:border-primary"
             />
             {filters.search && (
               <button
@@ -119,7 +119,7 @@ export function BrowseScreen({ onNavigate, initialCategory = 'all' }: BrowseScre
           </div>
           <button
             onClick={() => setShowFilters((v) => !v)}
-            className="relative flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card transition-colors hover:border-primary"
+            className="relative flex h-10 w-10 items-center justify-center rounded-full surface transition-colors hover:border-primary"
           >
             <SlidersHorizontal className="h-4 w-4" />
             {activeFilterCount > 0 && (
@@ -181,7 +181,7 @@ export function BrowseScreen({ onNavigate, initialCategory = 'all' }: BrowseScre
 
       {/* Filters panel */}
       {showFilters && (
-        <div className="rounded-2xl border border-border bg-card p-4">
+        <div className="surface rounded-[20px] p-4">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="font-semibold">Filters</h3>
             {activeFilterCount > 0 && (
@@ -255,7 +255,7 @@ export function BrowseScreen({ onNavigate, initialCategory = 'all' }: BrowseScre
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value as SortOption)}
-            className="appearance-none rounded-full border border-border bg-card py-2 pl-8 pr-8 text-xs font-medium outline-none focus:border-primary"
+            className="appearance-none rounded-full surface py-2 pl-8 pr-8 text-xs font-medium outline-none focus:border-primary"
           >
             {SORT_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>

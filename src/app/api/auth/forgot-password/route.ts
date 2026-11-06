@@ -67,7 +67,7 @@ export async function POST(request: Request) {
     });
 
     // Build the reset URL
-    const resetUrl = `${env.NEXTAUTH_URL}/?reset=${token}`;
+    const resetUrl = `${env.NEXTAUTH_URL}/app?reset=${token}`;
 
     // Send the email (uses Resend if configured, falls back to console.log)
     await sendPasswordResetEmail(user.email!, resetUrl);

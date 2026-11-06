@@ -216,7 +216,7 @@ export function AdminScreen({ onNavigate: _onNavigate }: AdminScreenProps) {
       </div>
 
       {/* User management */}
-      <div className="rounded-2xl border border-border bg-card">
+      <div className="surface rounded-[20px]">
         <div className="border-b border-border p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="font-semibold">User management</h2>
@@ -449,7 +449,7 @@ function StatCard({
   icon, label, value, sub, color, bg,
 }: { icon: React.ReactNode; label: string; value: string | number; sub: string; color: string; bg: string }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-4">
+    <div className="surface rounded-[20px] p-4">
       <div className={`mb-2 flex h-9 w-9 items-center justify-center rounded-lg ${bg} ${color}`}>
         {icon}
       </div>

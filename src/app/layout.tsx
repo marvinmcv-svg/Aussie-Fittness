@@ -1,27 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { inter } from "./fonts";
 import "./globals.css";
-import { Toaster } from "@/components/ui/toaster";
-import { Providers } from "@/components/providers/Providers";
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-});
 
-const siteUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+
+import { SITE_URL as siteUrl } from "@/lib/seo";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "Aussie Fitness Cookbook — 135 High-Protein Recipes",
+  title: "AussieFit — High-Protein Recipes, Meal Plans & Shopping Lists",
   description: "Low calorie & high protein recipes for fitness goals. Browse 135 macro-friendly meals, plan your week, and generate shopping lists instantly.",
   keywords: ["fitness cookbook", "high protein recipes", "low calorie meals", "meal prep", "macro friendly", "aussie fitness"],
   authors: [{ name: "Aussie Fitness" }],
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: "AussieFit",
   },
   icons: {
@@ -60,7 +54,11 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0f0d",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f2f2f7" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
+  viewportFit: "cover",
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
@@ -72,12 +70,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${inter.variable} font-sans antialiased bg-background text-foreground min-h-screen`}
       >
-        <Providers>{children}</Providers>
-        <Toaster />
+        {children}
       </body>
     </html>
   );

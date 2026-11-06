@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import { usePremium } from '@/store/premium';
+import { usePaywall } from '@/store/paywall';
+import { PRICE_LABEL } from '@/lib/pricing';
 import { useFavorites } from '@/store/favorites';
 import { useMealPlan } from '@/store/mealPlan';
 import { useShoppingList } from '@/store/shoppingList';
@@ -34,7 +36,6 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
   const { goals, setGoals, resetGoals } = useGoals();
   const { toast } = useToast();
   const stats = getRecipeStats();
-  const [showPaywall, setShowPaywall] = useState(false);
   const [showGoals, setShowGoals] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
@@ -52,8 +53,8 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
     <div className="space-y-6 pb-6">
       {/* Profile header */}
       <div className="flex flex-col items-center gap-3 rounded-3xl border border-border bg-gradient-to-br from-primary/10 to-card p-6 text-center">
-        <div className={`flex h-20 w-20 items-center justify-center rounded-full ${isPremium ? 'bg-gradient-to-br from-amber-500 to-orange-500' : 'bg-primary/15'}`}>
-          {isPremium ? <Crown className="h-10 w-10 text-white" /> : <ChefHat className="h-10 w-10 text-primary" />}
+        <div className={`flex h-20 w-20 items-center justify-center rounded-full ${isPremium ? 'bg-foreground' : 'bg-secondary'}`}>
+          {isPremium ? <Crown className="h-10 w-10 text-background" /> : <ChefHat className="h-10 w-10 text-foreground" />}
         </div>
         <div>
           <h1 className="text-xl font-extrabold">{displayName}</h1>
@@ -62,7 +63,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
           </p>
         </div>
         {isPremium ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-1.5 text-xs font-bold text-white">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-4 py-1.5 text-xs font-semibold text-background">
             <Crown className="h-3 w-3" />
             PREMIUM MEMBER
           </span>
@@ -85,7 +86,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
             </button>
             <button
               onClick={() => openAuth('signup')}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-5 py-2 text-sm font-semibold transition-colors hover:border-primary/50"
+              className="inline-flex items-center gap-1.5 rounded-full surface px-5 py-2 text-sm font-semibold transition-colors hover:border-primary/50"
             >
               Sign up
             </button>
@@ -102,7 +103,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
               </button>
             )}
             <button
-              onClick={() => signOut({ callbackUrl: '/' })}
+              onClick={() => signOut({ callbackUrl: '/app' })}
               className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:border-destructive/50 hover:text-destructive"
             >
               <LogOut className="h-4 w-4" />
@@ -120,7 +121,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
       </div>
 
       {/* Daily goals */}
-      <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="surface rounded-[20px] p-5">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="flex items-center gap-2 font-semibold">
             <Target className="h-5 w-5 text-primary" aria-hidden="true" />
@@ -158,10 +159,9 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
 
       {/* Premium paywall card */}
       {!isPremium ? (
-        <div className="relative overflow-hidden rounded-3xl border border-amber-500/30 bg-gradient-to-br from-amber-500/15 via-card to-card p-6">
-          <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-amber-500/20 blur-2xl" />
+        <div className="surface relative overflow-hidden rounded-[28px] p-6">
           <div className="relative">
-            <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 px-3 py-1 text-xs font-bold text-amber-400">
+            <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-muted-foreground">
               <Crown className="h-3 w-3" />
               PREMIUM UNLOCK
             </div>
@@ -179,14 +179,14 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
             </div>
 
             <button
-              onClick={() => setShowPaywall(true)}
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-amber-500/20 transition-transform hover:scale-[1.02]"
+              onClick={() => usePaywall.getState().show('profile')}
+              className="pressable mt-6 flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-foreground px-6 text-[17px] font-semibold text-background"
             >
               <Crown className="h-5 w-5" />
-              Unlock Premium — $9.99
+              Unlock everything — {PRICE_LABEL}
             </button>
             <p className="mt-2 text-center text-[11px] text-muted-foreground">
-              Demo purchase — no real charge. Tap to simulate unlock.
+              One-time payment · 14-day money-back guarantee
             </p>
           </div>
         </div>
@@ -219,7 +219,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
       <LegalSection />
 
       {/* Author / credits */}
-      <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="surface rounded-[20px] p-5">
         <h3 className="mb-2 font-semibold">About this cookbook</h3>
         <p className="text-sm leading-relaxed text-muted-foreground">
           {stats.total} low-calorie, high-protein recipes extracted from the
@@ -238,17 +238,6 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
           </div>
         </div>
       </div>
-
-      {/* Paywall modal */}
-      {showPaywall && (
-        <PaywallModal
-          onClose={() => setShowPaywall(false)}
-          onSuccess={() => {
-            setShowPaywall(false);
-            toast({ title: 'Premium unlocked!', description: 'All 135 recipes are now yours.' });
-          }}
-        />
-      )}
 
       {/* Goals modal */}
       <GoalsModal
@@ -278,7 +267,7 @@ function StatBox({
   return (
     <button
       onClick={onClick}
-      className="rounded-2xl border border-border bg-card p-4 text-center transition-colors hover:border-primary/40"
+      className="surface rounded-[20px] p-4 text-center transition-colors hover:border-primary/40"
     >
       <div className={`mb-1 flex justify-center ${color}`}>{icon}</div>
       <div className="text-2xl font-bold">{value}</div>
@@ -290,7 +279,7 @@ function StatBox({
 function Feature({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
     <div className="flex items-center gap-2.5">
-      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-amber-400">
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-secondary text-foreground">
         {icon}
       </div>
       <span className="text-sm">{text}</span>
@@ -304,7 +293,7 @@ function LinkRow({
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:border-primary/40"
+      className="flex w-full items-center gap-3 surface rounded-[20px] p-4 text-left transition-colors hover:border-primary/40"
     >
       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
         {icon}
@@ -312,105 +301,6 @@ function LinkRow({
       <span className="flex-1 text-sm font-medium">{label}</span>
       <span className="text-xs text-muted-foreground">{value}</span>
     </button>
-  );
-}
-
-function PaywallModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
-  const [processing, setProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handlePurchase = async () => {
-    setProcessing(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/stripe/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to start checkout');
-      }
-      // If Stripe is configured, redirect to Stripe Checkout
-      if (data.url) {
-        window.location.href = data.url;
-        return;
-      }
-      // If Stripe is NOT configured (demo mode), payment is processed instantly
-      // The API route grants premium directly. Refresh the session.
-      if (data.demo) {
-        // Trigger session refresh by reloading
-        window.location.reload();
-        return;
-      }
-      throw new Error('Unexpected response from server');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
-      setProcessing(false);
-    }
-  };
-
-  return (
-    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="max-w-md gap-0 p-0" aria-describedby="paywall-desc">
-        <DialogDescription id="paywall-desc" className="sr-only">
-          Unlock premium to access all recipes, the meal planner, and smart shopping lists.
-        </DialogDescription>
-        <div className="relative bg-gradient-to-br from-amber-500 to-orange-500 p-6 text-center text-white">
-          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-white/20">
-            <Crown className="h-8 w-8" aria-hidden="true" />
-          </div>
-          <DialogTitle className="text-xl font-extrabold text-white">Unlock Premium</DialogTitle>
-          <p className="mt-1 text-sm text-white/90">All recipes, forever</p>
-        </div>
-        <div className="p-6">
-          <div className="mb-4 space-y-2">
-            {[
-              'All 110+ premium recipes unlocked',
-              'Meal planner with macro tracking',
-              'Smart shopping list',
-              'No ads, ever',
-            ].map((t) => (
-              <div key={t} className="flex items-center gap-2.5">
-                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-protein/20">
-                  <Check className="h-3 w-3 text-protein" aria-hidden="true" />
-                </div>
-                <span className="text-sm">{t}</span>
-              </div>
-            ))}
-          </div>
-          <div className="mb-4 rounded-xl bg-muted/50 p-3 text-center">
-            <div className="text-3xl font-extrabold">$9.99</div>
-            <div className="text-xs text-muted-foreground">one-time payment</div>
-          </div>
-          {error && (
-            <div className="mb-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-              {error}
-            </div>
-          )}
-          <button
-            onClick={handlePurchase}
-            disabled={processing}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-amber-500/20 transition-transform hover:scale-[1.02] disabled:opacity-70"
-          >
-            {processing ? (
-              <>
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                Redirecting to checkout...
-              </>
-            ) : (
-              <>
-                <Crown className="h-5 w-5" aria-hidden="true" />
-                Purchase & Unlock
-              </>
-            )}
-          </button>
-          <p className="mt-3 text-center text-[11px] text-muted-foreground">
-            Secure payment via Stripe. You&apos;ll be redirected to complete your purchase.
-          </p>
-        </div>
-      </DialogContent>
-    </Dialog>
   );
 }
 

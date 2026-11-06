@@ -34,6 +34,16 @@ export async function POST() {
   // 3. If Stripe is NOT configured → demo mode: grant premium directly
   //    This is for development/testing only. In production, Stripe MUST be configured.
   if (!env.STRIPE_ENABLED) {
+    // Never hand out free premium on a live site. If Stripe env vars are
+    // missing in production, fail loudly instead of silently giving the product
+    // away. Set ALLOW_DEMO_PREMIUM=true only on staging/preview deployments.
+    if (env.NODE_ENV === 'production' && process.env.ALLOW_DEMO_PREMIUM !== 'true') {
+      console.error('[checkout] Stripe is not configured in production — refusing demo unlock.');
+      return NextResponse.json(
+        { error: 'Payments are temporarily unavailable. Please try again shortly.' },
+        { status: 503 }
+      );
+    }
     await db.user.update({
       where: { id: user.id },
       data: { isPremium: true },
@@ -63,8 +73,8 @@ export async function POST() {
       // Pass the user ID so the webhook knows who to upgrade
       client_reference_id: user.id,
       customer_email: user.email,
-      success_url: `${env.NEXTAUTH_URL}/?payment=success`,
-      cancel_url: `${env.NEXTAUTH_URL}/?payment=cancelled`,
+      success_url: `${env.NEXTAUTH_URL}/app?payment=success`,
+      cancel_url: `${env.NEXTAUTH_URL}/app?payment=cancelled`,
       metadata: {
         userId: user.id,
         email: user.email,

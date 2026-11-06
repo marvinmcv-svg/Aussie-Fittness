@@ -9,7 +9,8 @@ import { getRecipeById, getRecipeVisual } from '@/lib/recipes';
 import { MacroRing, MacroBar } from '@/components/recipe/MacroBar';
 import { ImageWithFallback } from '@/components/recipe/ImageWithFallback';
 import { useFavorites } from '@/store/favorites';
-import { usePremium } from '@/store/premium';
+import { usePaywall } from '@/store/paywall';
+import { useFullRecipe } from '@/hooks/use-full-recipe';
 import { useMealPlan } from '@/store/mealPlan';
 import { useShoppingList } from '@/store/shoppingList';
 import { useToast } from '@/hooks/use-toast';
@@ -32,7 +33,9 @@ interface RecipeDetailScreenProps {
 }
 
 export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetailScreenProps) {
-  const recipe = useMemo(() => getRecipeById(recipeId), [recipeId]);
+  const publicRecipe = useMemo(() => getRecipeById(recipeId), [recipeId]);
+  // Premium content is fetched from the server only for premium users.
+  const { recipe, locked, loading } = useFullRecipe(publicRecipe);
   const [servings, setServings] = useState(recipe?.servings ?? 1);
   const [checkedSteps, setCheckedSteps] = useState<Set<number>>(new Set());
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set());
@@ -41,7 +44,6 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
 
   const fav = useFavorites((s) => s.favorites.includes(recipeId));
   const toggleFavorite = useFavorites((s) => s.toggleFavorite);
-  const isPremium = usePremium((s) => s.isPremium);
   const addMeal = useMealPlan((s) => s.addMeal);
   const addItems = useShoppingList((s) => s.addItems);
   const { toast } = useToast();
@@ -58,7 +60,9 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
   }
 
   const visual = getRecipeVisual(recipe);
-  const locked = recipe.premium && !isPremium;
+  const openPaywall = () => usePaywall.getState().show(`recipe:${recipe.id}`);
+  const totalIngredients = recipe.ingredientCount ?? recipe.ingredients.length;
+  const totalSteps = recipe.stepCount ?? recipe.directions.length;
   const servingsMultiplier = servings / recipe.servings;
 
   const toggleStep = (i: number) => {
@@ -89,6 +93,10 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
   };
 
   const addIngredientsToShopping = () => {
+    if (locked) {
+      openPaywall();
+      return;
+    }
     const items = recipe.ingredients.map((ing) => ({
       name: ing,
       quantity: servingsMultiplier !== 1 ? `×${servingsMultiplier.toFixed(1)} servings` : undefined,
@@ -112,18 +120,9 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
   };
 
   return (
-    <div className="space-y-5 pb-6">
-      {/* Back button */}
-      <button
-        onClick={onBack}
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back
-      </button>
-
-      {/* Hero image */}
-      <div className={`relative aspect-[16/10] overflow-hidden rounded-3xl bg-gradient-to-br ${visual.gradient}`}>
+    <div className="space-y-5">
+      {/* Hero — full-bleed photo with floating glass controls */}
+      <div className={`relative -mx-4 -mt-4 aspect-[4/3] overflow-hidden bg-gradient-to-br sm:mx-0 sm:mt-0 sm:aspect-[16/9] sm:rounded-[28px] ${visual.gradient}`}>
         <ImageWithFallback
           src={visual.photo}
           alt={recipe.title}
@@ -131,41 +130,44 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
           fallbackClassName="absolute inset-0 flex items-center justify-center"
           fallback={<span className="text-8xl drop-shadow-2xl">{visual.emoji}</span>}
         />
-        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent" />
-        <div className="absolute left-4 top-4 flex gap-2">
+        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/35 to-transparent" />
+        <div className="absolute inset-x-0 top-0 flex items-center justify-between p-4">
           <button
-            onClick={handleFavorite}
-            aria-label={fav ? `Remove ${recipe.title} from favorites` : `Add ${recipe.title} to favorites`}
-            aria-pressed={fav}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm transition-colors hover:bg-black/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            onClick={onBack}
+            aria-label="Back"
+            className="pressable flex h-10 w-10 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
-            <Heart className={`h-5 w-5 ${fav ? 'fill-red-500 text-red-500' : 'text-white'}`} aria-hidden="true" />
+            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           </button>
-        </div>
-        {locked && (
-          <div className="absolute right-4 top-4 flex items-center gap-1.5 rounded-full bg-amber-500/90 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-sm">
-            <Lock className="h-3 w-3" />
-            PREMIUM
+          <div className="flex items-center gap-2">
+            {locked && (
+              <span className="inline-flex h-10 items-center gap-1.5 rounded-full bg-black/35 px-3.5 text-[13px] font-semibold text-white backdrop-blur-md">
+                <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+                Premium
+              </span>
+            )}
+            <button
+              onClick={handleFavorite}
+              aria-label={fav ? `Remove ${recipe.title} from favorites` : `Add ${recipe.title} to favorites`}
+              aria-pressed={fav}
+              className="pressable flex h-10 w-10 items-center justify-center rounded-full bg-black/35 backdrop-blur-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              <Heart className={`h-5 w-5 ${fav ? 'fill-[#ff375f] text-[#ff375f]' : 'text-white'}`} aria-hidden="true" />
+            </button>
           </div>
-        )}
-        <div className="absolute bottom-4 left-4 flex items-center gap-3 text-white">
-          <span className="flex items-center gap-1.5 text-sm font-medium">
-            <Clock className="h-4 w-4" />
-            {recipe.cookTime} min
-          </span>
-          <span className="flex items-center gap-1.5 text-sm font-medium">
-            <Users className="h-4 w-4" />
-            {recipe.servings} {recipe.servingsUnit}
-          </span>
         </div>
       </div>
 
       {/* Title + tags */}
       <div>
-        <h1 className="text-2xl font-extrabold leading-tight sm:text-3xl">{recipe.title}</h1>
-        <div className="mt-2 flex flex-wrap gap-1.5">
+        <h1 className="text-[28px] font-bold leading-tight tracking-tight sm:text-4xl">{recipe.title}</h1>
+        <p className="mt-1 flex items-center gap-3 text-[15px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1"><Clock className="h-4 w-4" aria-hidden="true" />{recipe.cookTime} min</span>
+          <span className="inline-flex items-center gap-1"><Users className="h-4 w-4" aria-hidden="true" />{recipe.servings} {recipe.servingsUnit}</span>
+        </p>
+        <div className="mt-3 flex flex-wrap gap-1.5">
           {recipe.tags.map((t) => (
-            <span key={t} className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+            <span key={t} className="rounded-full bg-secondary px-2.5 py-1 text-[12px] font-medium text-muted-foreground">
               {t}
             </span>
           ))}
@@ -173,7 +175,7 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
       </div>
 
       {/* Macros */}
-      <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="surface rounded-[20px] p-5">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-semibold">
             Nutrition {recipe.isTotal ? '(whole recipe)' : '(per serving)'}
@@ -201,7 +203,7 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
       </div>
 
       {/* Servings adjuster */}
-      <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="surface rounded-[20px] p-5">
         <h2 className="mb-3 font-semibold">Adjust servings</h2>
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">
@@ -247,18 +249,18 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
       <div className="grid grid-cols-2 gap-3">
         <button
           onClick={() => setShowAddToPlan((v) => !v)}
-          className="flex items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.02]"
+          className="flex items-center justify-center gap-2 pressable h-12 rounded-full bg-primary px-4 text-[15px] font-semibold text-primary-foreground"
         >
           <CalendarPlus className="h-4 w-4" />
           Add to plan
         </button>
         <button
           onClick={addIngredientsToShopping}
-          disabled={addedToShopping}
-          className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm font-semibold transition-colors hover:border-primary disabled:opacity-60"
+          disabled={addedToShopping || loading}
+          className="pressable flex h-12 items-center justify-center gap-2 rounded-full bg-secondary px-4 text-[15px] font-semibold disabled:opacity-60"
         >
           {addedToShopping ? <Check className="h-4 w-4 text-protein" /> : <ShoppingCart className="h-4 w-4" />}
-          {addedToShopping ? 'Added!' : 'Add to shopping'}
+          {addedToShopping ? 'Added!' : locked ? 'Unlock to shop' : 'Add to shopping'}
         </button>
       </div>
 
@@ -297,12 +299,12 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
       )}
 
       {/* Ingredients */}
-      <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="surface rounded-[20px] p-5">
         <div className="mb-3 flex items-center gap-2">
           <ChefHat className="h-5 w-5 text-primary" />
           <h2 className="font-semibold">Ingredients</h2>
           <span className="ml-auto text-xs text-muted-foreground">
-            {checkedIngredients.size}/{recipe.ingredients.length}
+            {locked ? `${totalIngredients} items` : `${checkedIngredients.size}/${totalIngredients}`}
           </span>
         </div>
         <ul className="space-y-2">
@@ -326,17 +328,41 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
             </li>
           ))}
         </ul>
+        {locked && totalIngredients > recipe.ingredients.length && (
+          <div className="relative mt-1" aria-hidden="true">
+            <ul className="space-y-2 select-none blur-[5px]">
+              {Array.from({ length: Math.min(4, totalIngredients - recipe.ingredients.length) }).map((_, i) => (
+                <li key={i} className="flex items-center gap-3 p-2">
+                  <span className="h-5 w-5 rounded border border-border" />
+                  <span className="h-3 rounded bg-muted-foreground/40" style={{ width: `${55 + ((i * 17) % 35)}%` }} />
+                </li>
+              ))}
+            </ul>
+            <div className="absolute inset-0 bg-gradient-to-b from-card/0 to-card" />
+          </div>
+        )}
+        {loading && <p className="mt-2 text-xs text-muted-foreground">Loading full recipe…</p>}
       </div>
 
       {/* Directions */}
-      <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="surface rounded-[20px] p-5">
         <div className="mb-3 flex items-center gap-2">
           <ListChecks className="h-5 w-5 text-primary" />
           <h2 className="font-semibold">Directions</h2>
           <span className="ml-auto text-xs text-muted-foreground">
-            {checkedSteps.size}/{recipe.directions.length} done
+            {locked ? `${totalSteps} steps` : `${checkedSteps.size}/${totalSteps} done`}
           </span>
         </div>
+        {locked && (
+          <button
+            onClick={openPaywall}
+            className="flex w-full flex-col items-center gap-2 rounded-xl border border-dashed border-border bg-muted/30 px-4 py-6 text-center transition-colors hover:border-primary/50"
+          >
+            <Lock className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+            <span className="text-sm font-semibold">{totalSteps} step-by-step directions</span>
+            <span className="text-xs text-muted-foreground">Included with lifetime access</span>
+          </button>
+        )}
         <ol className="space-y-3">
           {recipe.directions.map((step, i) => (
             <li key={i}>
@@ -362,20 +388,20 @@ export function RecipeDetailScreen({ recipeId, onNavigate, onBack }: RecipeDetai
 
       {/* Premium upsell */}
       {locked && (
-        <div className="relative overflow-hidden rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/15 to-card p-5">
+        <div className="surface relative overflow-hidden rounded-[20px] p-5">
           <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500/20">
-              <Crown className="h-5 w-5 text-amber-400" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-foreground">
+              <Crown className="h-5 w-5 text-background" />
             </div>
             <div className="flex-1">
               <h3 className="font-bold">Premium Recipe</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                You can view the macros, but unlock premium to access the full
-                recipe and 110+ others.
+                Unlock the full ingredients and directions for this recipe and
+                every other premium recipe — one payment, yours forever.
               </p>
               <button
-                onClick={() => onNavigate('profile')}
-                className="mt-3 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-2 text-sm font-bold text-white"
+                onClick={openPaywall}
+                className="pressable mt-3 inline-flex h-11 items-center gap-2 rounded-full bg-foreground px-5 text-[15px] font-semibold text-background"
               >
                 <Crown className="h-4 w-4" />
                 Unlock now

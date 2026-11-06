@@ -4,8 +4,8 @@
   "description": "135 high-protein, low-calorie recipes. Plan your meals, track macros, and generate shopping lists.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0f0d",
-  "theme_color": "#0a0f0d",
+  "background_color": "#f2f2f7",
+  "theme_color": "#f2f2f7",
   "orientation": "portrait-primary",
   "categories": ["food", "health", "fitness"],
   "icons": [

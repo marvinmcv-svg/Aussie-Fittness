@@ -1,29 +1,23 @@
 import type { MetadataRoute } from 'next';
-import { getAllRecipes } from '@/lib/recipes';
+import { getSiteRecipes } from '@/content/site-recipes';
+import { SITE_URL } from '@/lib/seo';
 
 export const dynamic = 'force-static';
 
+/** Every marketing page in EN + ES, with hreflang alternates. */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXTAUTH_URL ?? 'http://localhost:3000';
-
-  // Static pages
-  const staticPages: MetadataRoute.Sitemap = [
-    {
-      url: baseUrl,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 1,
-    },
+  const now = new Date();
+  const paths = ['/', '/recipes', '/ebooks', '/about', ...getSiteRecipes().map((r) => `/recipes/${r.id}`)];
+  const es = (p: string) => (p === '/' ? '/es' : `/es${p}`);
+  return [
+    ...paths.flatMap((p) => {
+      const languages = { en: `${SITE_URL}${p === '/' ? '' : p}`, es: `${SITE_URL}${es(p)}` };
+      const priority = p === '/' ? 1 : p.startsWith('/recipes/') ? 0.7 : 0.8;
+      return [
+        { url: languages.en, lastModified: now, priority, alternates: { languages } },
+        { url: languages.es, lastModified: now, priority: priority - 0.1, alternates: { languages } },
+      ];
+    }),
+    { url: `${SITE_URL}/app`, lastModified: now, priority: 0.6 },
   ];
-
-  // Recipe pages (using query params since we're a SPA)
-  const recipes = getAllRecipes();
-  const recipePages: MetadataRoute.Sitemap = recipes.map((recipe) => ({
-    url: `${baseUrl}/?recipe=${recipe.id}`,
-    lastModified: new Date(),
-    changeFrequency: 'monthly',
-    priority: 0.8,
-  }));
-
-  return [...staticPages, ...recipePages];
 }

@@ -64,7 +64,7 @@ export function ShoppingScreen({ onNavigate }: ShoppingScreenProps) {
 
       {/* Progress bar */}
       {items.length > 0 && (
-        <div className="rounded-2xl border border-border bg-card p-4">
+        <div className="surface rounded-[20px] p-4">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-sm font-medium">Progress</span>
             <span className="text-sm font-bold text-primary">{Math.round(progress)}%</span>
@@ -120,14 +120,14 @@ export function ShoppingScreen({ onNavigate }: ShoppingScreenProps) {
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => setShowAdd(true)}
-            className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm font-semibold transition-colors hover:border-primary"
+            className="flex items-center justify-center gap-2 surface rounded-[20px] px-4 py-3 text-sm font-semibold transition-colors hover:border-primary"
           >
             <Plus className="h-4 w-4" />
             Add item
           </button>
           <button
             onClick={() => onNavigate('planner')}
-            className="flex items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.02]"
+            className="flex items-center justify-center gap-2 pressable h-12 rounded-full bg-primary px-4 text-[15px] font-semibold text-primary-foreground"
           >
             <ShoppingBasket className="h-4 w-4" />
             Import from planner
@@ -151,7 +151,7 @@ export function ShoppingScreen({ onNavigate }: ShoppingScreenProps) {
             if (catItems.length === 0) return null;
             const catChecked = catItems.filter((i) => i.checked).length;
             return (
-              <div key={cat} className="rounded-2xl border border-border bg-card p-4">
+              <div key={cat} className="surface rounded-[20px] p-4">
                 <div className="mb-3 flex items-center justify-between">
                   <h3 className="flex items-center gap-2 font-semibold">
                     <span>{CATEGORY_EMOJI[cat]}</span>
@@ -216,7 +216,7 @@ export function ShoppingScreen({ onNavigate }: ShoppingScreenProps) {
                 clearChecked();
                 toast({ title: `Cleared ${count} item${count !== 1 ? 's' : ''}` });
               }}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+              className="flex flex-1 items-center justify-center gap-2 surface rounded-[20px] px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
             >
               <CheckCircle2 className="h-4 w-4 text-protein" aria-hidden="true" />
               Clear checked ({checkedCount})
